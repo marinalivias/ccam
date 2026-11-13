@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Recuperar senha</title>
+    <meta name="description" content="Recupere o acesso ao sistema CCAM." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container auth auth--solo page">
+        <section class="auth__panel">
+          <a class="back-link" href="login.html"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-arrow-left"></use></svg>Voltar ao login</a>
+          <h2>Esqueceu sua senha?</h2>
+          <p class="lead">Informe o e-mail da sua conta e enviaremos as instruções para criar uma nova senha.</p>
+
+          <form id="formEsqueci">
+            <div class="field">
+              <label for="email">E-mail</label>
+              <div class="input-wrap">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mail"></use></svg>
+                <input type="email" id="email" required autocomplete="username" placeholder="seu@email.com" />
+              </div>
+            </div>
+            <p class="form-alert" id="esqueciError" role="alert" hidden></p>
+            <button class="btn btn--brand btn--block" type="submit">Enviar instruções</button>
+          </form>
+
+          <div id="esqueci-resultado" hidden></div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

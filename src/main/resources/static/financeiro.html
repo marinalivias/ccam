@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Financeiro</title>
+    <meta name="description" content="Gestão financeira e mensalidades no CCAM." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg>Financeiro</span>
+          <h1>Gestão Financeira</h1>
+          <p>Lançamento de mensalidades e acompanhamento de status.</p>
+        </section>
+
+        <section class="grid grid--split">
+          <article class="card" id="financeiro-card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg></span>
+              <div>
+                <h2>Lançamentos</h2>
+                <p class="help">Histórico das mensalidades, do vencimento mais recente ao mais antigo. Somente o gestor altera ou exclui lançamentos.</p>
+              </div>
+            </div>
+
+            <div class="toolbar" id="financeiro-filtros">
+              <div class="field toolbar__search">
+                <label for="fin-busca" class="sr-only">Buscar por aluno</label>
+                <div class="input-wrap">
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                  <input id="fin-busca" type="search" data-filter="busca" placeholder="Buscar por aluno" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="fin-status" class="sr-only">Status</label>
+                <select id="fin-status" data-filter="status">
+                  <option value="" data-default>Todos os status</option>
+                  <option value="Pendente">Pendentes</option>
+                  <option value="Pago">Pagos</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="fin-mes" class="sr-only">Mês de vencimento</label>
+                <input id="fin-mes" type="month" data-filter="mes" title="Mês de vencimento" />
+              </div>
+              <button type="button" class="btn btn--ghost" data-filter-clear>Limpar</button>
+            </div>
+
+            <div class="table-wrap">
+              <table aria-label="Tabela de movimentações financeiras">
+                <thead>
+                  <tr>
+                    <th class="col-name">Aluno</th>
+                    <th class="num">Valor</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th class="num">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-financeiro">
+                  <tr><td colspan="5" class="empty-cell"><p class="msg-info">Carregando lançamentos...</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="financeiro-paginacao"></div>
+          </article>
+
+          <article class="card" data-perm="FINANCEIRO_LANCAR">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg></span>
+              <div>
+                <h2>Lançar nova mensalidade</h2>
+                <p class="help">A cobrança é criada com status pendente.</p>
+              </div>
+            </div>
+
+            <form id="formFinanceiro" data-enhance>
+              <div class="field">
+                <label for="aluno_select">Selecionar aluno <span class="req" aria-hidden="true">*</span></label>
+                <select id="aluno_select" name="aluno" required>
+                  <option value="" disabled selected>Carregando alunos...</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="fin_valor">Valor (R$) <span class="req" aria-hidden="true">*</span></label>
+                <input type="number" id="fin_valor" step="0.01" min="0" inputmode="decimal" placeholder="Ex: 120.00" required />
+              </div>
+
+              <div class="field">
+                <label for="fin_vencimento">Data de vencimento <span class="req" aria-hidden="true">*</span></label>
+                <input type="date" id="fin_vencimento" name="vencimento" required />
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn--brand btn--block" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Gerar cobrança</button>
+              </div>
+            </form>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Login</title>
+    <meta name="description" content="Acesse o sistema CCAM." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container auth page">
+        <section class="auth__aside">
+          <h1>Controle e acompanhamento <span class="grad">em um só lugar</span></h1>
+          <p>Gerencie alunos, treinos, financeiro e comunicados em uma plataforma simples e organizada.</p>
+          <ul class="features">
+            <li><span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>Cadastro e acompanhamento de alunos</li>
+            <li><span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-dumbbell"></use></svg></span>Fichas de treino personalizadas</li>
+            <li><span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg></span>Controle financeiro e mural de avisos</li>
+          </ul>
+          <div class="contact-info" id="contato">
+            <span class="contact-info__title">Fale com a equipe CCAM</span>
+            <ul class="contact-info__list">
+              <li><a href="mailto:contato@ccam.com"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mail"></use></svg><span>contato@ccam.com</span></a></li>
+              <li><a href="tel:+5511900000000"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-phone"></use></svg><span>(11) 90000-0000</span></a></li>
+            </ul>
+            <div class="social" aria-label="Redes sociais">
+              <a class="social__btn" href="https://wa.me/5511900000000" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-whatsapp"></use></svg></a>
+              <a class="social__btn" href="https://instagram.com/ccam.sistema" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-instagram"></use></svg></a>
+              <a class="social__btn" href="https://facebook.com/ccam.sistema" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-facebook"></use></svg></a>
+              <a class="social__btn" href="https://linkedin.com/company/ccam-sistema" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-linkedin"></use></svg></a>
+            </div>
+          </div>
+        </section>
+
+        <section class="auth__panel">
+          <h2>Acesse o sistema</h2>
+          <p class="lead">Entre com seu e-mail e sua senha.</p>
+
+          <form id="loginForm">
+            <div class="field">
+              <label for="email">E-mail</label>
+              <div class="input-wrap">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-mail"></use></svg>
+                <input type="email" id="email" name="email" required autocomplete="username" placeholder="seu@email.com" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="password">Senha</label>
+              <div class="input-wrap">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-lock"></use></svg>
+                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Digite sua senha" />
+                <button type="button" class="input-action" data-toggle-password aria-label="Mostrar senha"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-eye"></use></svg></button>
+              </div>
+            </div>
+
+            <p class="form-alert" id="loginError" role="alert" hidden></p>
+
+            <button class="btn btn--brand btn--block" type="submit">Entrar<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg></button>
+
+            <div class="help" style="text-align: center;"><a class="link" href="esqueci-senha.html">Esqueceu sua senha?</a></div>
+          </form>
+
+          <p class="auth__alt">Ainda não é cliente? <a class="link" href="#contato" data-contato>Fale conosco</a></p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

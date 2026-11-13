@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Mural</title>
+    <meta name="description" content="Mural de avisos, novidades e eventos da academia." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-megaphone"></use></svg>Mural</span>
+          <h1>Mural de Avisos</h1>
+          <p>Novidades, comunicados e eventos da academia.</p>
+        </section>
+
+        <section class="grid" data-perm="MURAL_PUBLICAR">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-megaphone"></use></svg></span>
+              <div>
+                <h2>Criar novo comunicado</h2>
+                <p class="help">O aviso fica visível no mural assim que for publicado. Depois ele pode ser editado ou apagado.</p>
+              </div>
+            </div>
+
+            <form id="formMural" data-enhance>
+              <div class="field">
+                <label for="aviso_titulo">Título do aviso <span class="req" aria-hidden="true">*</span></label>
+                <input type="text" id="aviso_titulo" required placeholder="Ex: Manutenção programada" />
+              </div>
+
+              <div class="field">
+                <label for="aviso_mensagem">Mensagem <span class="req" aria-hidden="true">*</span></label>
+                <textarea id="aviso_mensagem" rows="4" required placeholder="Escreva a mensagem detalhada aqui..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn--brand"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-megaphone"></use></svg>Publicar aviso</button>
+              </div>
+            </form>
+          </article>
+        </section>
+
+        <h2 class="section-title" id="avisos-titulo">Avisos publicados</h2>
+        <div class="toolbar toolbar--bare" id="avisos-filtros">
+          <div class="field toolbar__search">
+            <label for="avisos-busca" class="sr-only">Buscar aviso</label>
+            <div class="input-wrap">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+              <input id="avisos-busca" type="search" data-filter="busca" placeholder="Buscar no título ou na mensagem" autocomplete="off" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="avisos-mes" class="sr-only">Mês de publicação</label>
+            <input id="avisos-mes" type="month" data-filter="mes" title="Mês de publicação" />
+          </div>
+          <button type="button" class="btn btn--ghost" data-filter-clear>Limpar filtros</button>
+        </div>
+        <section id="lista-avisos" class="grid grid--2">
+          <div class="card span-2"><p class="msg-info">Carregando avisos...</p></div>
+        </section>
+        <div id="avisos-paginacao"></div>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

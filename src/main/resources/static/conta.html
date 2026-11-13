@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Minha conta</title>
+    <meta name="description" content="Dados da sua conta e troca de senha." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user"></use></svg>Conta</span>
+          <h1>Minha Conta</h1>
+          <p>Seus dados de acesso e segurança.</p>
+        </section>
+
+        <section class="grid grid--split" style="grid-template-columns: minmax(0,1fr) minmax(0,1fr);">
+          <article class="card">
+            <div id="conta-dados"></div>
+          </article>
+
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-key"></use></svg></span>
+              <div>
+                <h2>Alterar senha</h2>
+                <p class="help">Após a troca, você entrará novamente no sistema.</p>
+              </div>
+            </div>
+            <form id="formSenha">
+              <div class="field">
+                <label for="senhaAtual">Senha atual <span class="req" aria-hidden="true">*</span></label>
+                <input id="senhaAtual" type="password" required autocomplete="current-password" />
+              </div>
+              <div class="field">
+                <label for="novaSenha">Nova senha <span class="req" aria-hidden="true">*</span></label>
+                <input id="novaSenha" type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo de 6 caracteres" />
+              </div>
+              <div class="field">
+                <label for="confirmaSenha">Confirmar nova senha <span class="req" aria-hidden="true">*</span></label>
+                <input id="confirmaSenha" type="password" required minlength="6" autocomplete="new-password" />
+              </div>
+              <p class="form-alert" id="senhaError" role="alert" hidden></p>
+              <div class="form-actions">
+                <button class="btn btn--brand" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Salvar nova senha</button>
+              </div>
+            </form>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

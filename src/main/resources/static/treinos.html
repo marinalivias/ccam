@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Treinos</title>
+    <meta name="description" content="Gestão de treinos e fichas dos alunos no CCAM." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-dumbbell"></use></svg>Treinos</span>
+          <h1>Gestão de Treinos</h1>
+          <p>Selecione exercícios do catálogo para montar a ficha personalizada do aluno.</p>
+        </section>
+
+        <section class="grid grid--2" data-perm="TREINOS_EDITAR">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clipboard"></use></svg></span>
+              <div>
+                <h2>Prescrever exercício</h2>
+                <p class="help">Defina aluno, séries, repetições e carga.</p>
+              </div>
+            </div>
+
+            <form id="formTreino" data-enhance>
+              <div class="field">
+                <label for="select-aluno">1. Selecionar aluno <span class="req" aria-hidden="true">*</span></label>
+                <select id="select-aluno" required>
+                  <option value="" disabled selected>Carregando alunos...</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label id="lbl-exercicio">2. Exercício selecionado <span class="req" aria-hidden="true">*</span></label>
+                <div id="exercicio-display" class="display-box" aria-labelledby="lbl-exercicio" aria-live="polite">
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-list"></use></svg><span>Nenhum exercício selecionado. Escolha um item no catálogo.</span>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="field">
+                  <label for="series">Séries <span class="req" aria-hidden="true">*</span></label>
+                  <input id="series" type="number" min="1" placeholder="Ex: 4" required />
+                </div>
+                <div class="field">
+                  <label for="repeticoes">Repetições <span class="req" aria-hidden="true">*</span></label>
+                  <input id="repeticoes" type="text" placeholder="Ex: 12 a 15" required />
+                </div>
+                <div class="field">
+                  <label for="carga">Carga sugerida <span class="req" aria-hidden="true">*</span></label>
+                  <input id="carga" type="text" placeholder="Ex: 20kg" required />
+                </div>
+                <div class="field">
+                  <label for="dia_semana">Dia da semana <span class="req" aria-hidden="true">*</span></label>
+                  <select id="dia_semana" required>
+                      <option value="Segunda-feira">Segunda-feira</option>
+                      <option value="Terça-feira">Terça-feira</option>
+                      <option value="Quarta-feira">Quarta-feira</option>
+                      <option value="Quinta-feira">Quinta-feira</option>
+                      <option value="Sexta-feira">Sexta-feira</option>
+                      <option value="Sábado">Sábado</option>
+                      <option value="Domingo">Domingo</option>
+                      <option value="Rotativo (Ficha)">Rotativo (Ficha)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn--brand" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Adicionar à ficha do aluno</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-list"></use></svg></span>
+              <div>
+                <h2>Catálogo de exercícios</h2>
+                <p class="help">Abra uma categoria e selecione o exercício desejado.</p>
+              </div>
+            </div>
+
+            <div id="catalogo-container">
+              <p class="msg-info">Carregando biblioteca...</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>
+              <div>
+                <h2>Visualizar ficha do aluno</h2>
+                <p class="help">Selecione um aluno para consultar o treino completo cadastrado no aplicativo.</p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="select-aluno-view" class="sr-only">Aluno</label>
+              <select id="select-aluno-view">
+                <option value="" disabled selected>Carregando alunos...</option>
+              </select>
+            </div>
+
+            <div id="treino-aluno-display" class="treino-display">
+              <div class="empty">
+                <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clipboard"></use></svg></span>
+                <strong>Nenhum aluno selecionado</strong>
+                <span>Escolha um aluno acima para ver a ficha de treino.</span>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

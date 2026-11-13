@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Início</title>
+    <meta name="description" content="CCAM: gestão de alunos, treinos, financeiro e comunicados." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero hero--home">
+          <h1>Bem-vindo(a) ao <span class="grad">CCAM</span></h1>
+          <p>Gerenciamento e gestão interna da academia: alunos, treinos, financeiro e comunicação em um só lugar.</p>
+          <div class="hero__actions">
+            <a class="btn btn--brand" href="cadastro.html" data-perm="ALUNOS_EDITAR"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user-plus"></use></svg>Novo cadastro</a>
+            <a class="btn" href="treinos.html" data-perm="TREINOS_VER"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-dumbbell"></use></svg>Ver treinos</a>
+            <a class="btn btn--brand" href="empresas.html" data-perm="EMPRESAS_GERENCIAR"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-building"></use></svg>Cadastrar empresa</a>
+          </div>
+        </section>
+
+        <h2 class="section-title">Acesso rápido</h2>
+        <section class="grid grid--3" style="margin-top: 14px;">
+          <a class="module" href="cadastro.html" data-perm="ALUNOS_VER">
+            <span class="chip-icon "><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user-plus"></use></svg></span>
+            <span class="module__body"><strong>Alunos</strong><span>Cadastre, busque e edite alunos, com histórico de alterações.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="treinos.html" data-perm="TREINOS_VER">
+            <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-dumbbell"></use></svg></span>
+            <span class="module__body"><strong>Treinos</strong><span>Monte fichas personalizadas a partir do catálogo de exercícios.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="financeiro.html" data-perm="FINANCEIRO_VER">
+            <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg></span>
+            <span class="module__body"><strong>Financeiro</strong><span>Lance mensalidades e acompanhe o status de pagamento.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="empresa.html" data-perm="EMPRESA_VER">
+            <span class="chip-icon chip-icon--warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-building"></use></svg></span>
+            <span class="module__body"><strong>Empresa</strong><span>Dados institucionais e administrativos da academia.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="mural.html" data-perm="MURAL_VER">
+            <span class="chip-icon "><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-megaphone"></use></svg></span>
+            <span class="module__body"><strong>Mural</strong><span>Publique avisos, novidades e eventos para os alunos.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="crm.html" data-perm="CRM_VER">
+            <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chart"></use></svg></span>
+            <span class="module__body"><strong>CRM</strong><span>Retenção, novos alunos e aniversariantes do mês.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="usuarios.html" data-perm="USUARIOS_GERENCIAR">
+            <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>
+            <span class="module__body"><strong>Usuários</strong><span>Gerencie a equipe: gestores, professores e atendentes.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+          <a class="module" href="empresas.html" data-perm="EMPRESAS_GERENCIAR">
+            <span class="chip-icon "><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-building"></use></svg></span>
+            <span class="module__body"><strong>Empresas</strong><span>Cadastre e gerencie as academias que usam o sistema.</span></span>
+            <svg class="icon module__arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right"></use></svg>
+          </a>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

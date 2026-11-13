@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | CRM</title>
+    <meta name="description" content="Controle geral de retenção, novos alunos e aniversariantes." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chart"></use></svg>CRM</span>
+          <h1>CRM</h1>
+          <p>Acompanhamento de retenção, novos alunos e aniversariantes.</p>
+        </section>
+
+        <section class="grid grid--3">
+          <article class="card kpi">
+            <div class="kpi__top">
+              <h2 class="kpi__title">Visitantes / Total geral</h2>
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>
+            </div>
+            <div class="kpi__foot">
+              <span class="kpi__value" id="kpi-total-alunos">...</span>
+              <span class="kpi__label">alunos ativos</span>
+            </div>
+          </article>
+          <article class="card kpi">
+            <div class="kpi__top">
+              <h2 class="kpi__title">Frequentes</h2>
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg></span>
+            </div>
+            <div class="kpi__foot">
+              <span class="kpi__value" id="kpi-frequentes">--</span>
+              <span class="kpi__label">presenças/semana</span>
+            </div>
+          </article>
+          <article class="card kpi">
+            <div class="kpi__top">
+              <h2 class="kpi__title">Novatos (mês)</h2>
+              <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-trending-up"></use></svg></span>
+            </div>
+            <div class="kpi__foot">
+              <span class="kpi__value" id="kpi-novatos">--</span>
+              <span class="kpi__label">novas matrículas</span>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid grid--2">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg></span>
+              <div>
+                <h2>Alunos ausentes (mais de 15 dias)</h2>
+                <p class="help">Quem não treina há mais de duas semanas.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Último treino</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-ausentes">
+                  <tr><td colspan="3" class="empty-cell"><div class="empty"><span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg></span><strong>Indicador em desenvolvimento</strong><span>Os alunos ausentes serão listados aqui.</span></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-cake"></use></svg></span>
+              <div>
+                <h2>Aniversariantes do mês</h2>
+                <p class="help">Uma boa oportunidade de relacionamento.</p>
+              </div>
+            </div>
+            <ul class="list" id="lista-aniversariantes">
+              <li class="is-empty"><div class="empty"><span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-cake"></use></svg></span><strong>Indicador em desenvolvimento</strong><span>Os aniversariantes do mês serão listados aqui.</span></div></li>
+            </ul>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

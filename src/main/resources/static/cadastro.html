@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Alunos</title>
+    <meta name="description" content="Cadastro e consulta de alunos no CCAM." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user-plus"></use></svg>Alunos</span>
+          <h1>Alunos</h1>
+          <p>Cadastre novos alunos, consulte quem já está registrado e mantenha os dados atualizados.</p>
+        </section>
+
+        <section class="grid" data-perm="ALUNOS_EDITAR">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user-plus"></use></svg></span>
+              <div>
+                <h2 id="aluno-form-title">Novo aluno</h2>
+                <p class="help" id="aluno-form-sub">Campos marcados com <span class="req" aria-hidden="true">*</span> são obrigatórios.</p>
+              </div>
+            </div>
+
+            <form id="formCadastro">
+              <div class="form-section">
+                <h3 class="form-section__title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user"></use></svg>Dados pessoais</h3>
+                <div class="row">
+                  <div class="field">
+                    <label for="nome">Nome completo <span class="req" aria-hidden="true">*</span></label>
+                    <input id="nome" type="text" required autocomplete="name" placeholder="Nome e sobrenome" />
+                  </div>
+                  <div class="field">
+                    <label for="cpf">CPF <span class="req" aria-hidden="true">*</span></label>
+                    <input id="cpf" type="text" required inputmode="numeric" data-mask="cpf" placeholder="000.000.000-00" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field">
+                    <label for="data_nascimento">Data de nascimento</label>
+                    <input id="data_nascimento" type="date" />
+                  </div>
+                  <div class="field">
+                    <label for="sexo">Sexo</label>
+                    <select id="sexo">
+                      <option value="M">Masculino</option>
+                      <option value="F">Feminino</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3 class="form-section__title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-phone"></use></svg>Contato</h3>
+                <div class="row row--3">
+                  <div class="field">
+                    <label for="email">E-mail <span class="req" aria-hidden="true">*</span></label>
+                    <input id="email" type="email" required autocomplete="email" placeholder="aluno@email.com" />
+                  </div>
+                  <div class="field">
+                    <label for="celular">Celular <span class="req" aria-hidden="true">*</span></label>
+                    <input id="celular" type="tel" required data-mask="phone" autocomplete="tel" placeholder="(00) 00000-0000" />
+                  </div>
+                  <div class="field">
+                    <label for="telefone_fixo">Telefone fixo</label>
+                    <input id="telefone_fixo" type="tel" data-mask="phone" placeholder="(00) 0000-0000" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3 class="form-section__title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg>Medidas e saúde</h3>
+                <div class="row">
+                  <div class="field">
+                    <label for="peso">Peso (kg)</label>
+                    <input id="peso" type="number" step="0.1" placeholder="Ex: 75.5" />
+                  </div>
+                  <div class="field">
+                    <label for="altura">Altura (m)</label>
+                    <input id="altura" type="number" step="0.01" placeholder="Ex: 1.75" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="condicao_saude">Condição de saúde</label>
+                  <textarea id="condicao_saude" placeholder="Informe alergias, lesões ou condições médicas..."></textarea>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn--brand" type="submit" id="btn-salvar-aluno"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Salvar cadastro</button>
+                <button class="btn btn--ghost" type="button" id="btn-cancelar-aluno" hidden>Cancelar edição</button>
+              </div>
+            </form>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="card" id="alunos-card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>
+              <div>
+                <h2>Alunos cadastrados</h2>
+                <p class="help">Busque por nome, e-mail ou CPF. Alunos inativos não são apagados: o cadastro e o histórico ficam guardados.</p>
+              </div>
+            </div>
+
+            <div class="toolbar" id="alunos-filtros">
+              <div class="field toolbar__search">
+                <label for="alunos-busca" class="sr-only">Buscar aluno</label>
+                <div class="input-wrap">
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                  <input id="alunos-busca" type="search" data-filter="busca" placeholder="Buscar por nome, e-mail ou CPF" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="alunos-status" class="sr-only">Situação</label>
+                <select id="alunos-status" data-filter="status">
+                  <option value="ativos" data-default>Alunos atuais (ativos)</option>
+                  <option value="inativos">Somente inativos</option>
+                  <option value="todos">Todos os alunos</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn--ghost" data-filter-clear>Limpar filtros</button>
+            </div>
+
+            <div class="table-wrap">
+              <table aria-label="Alunos cadastrados">
+                <thead>
+                  <tr>
+                    <th class="col-name">Aluno</th>
+                    <th>CPF</th>
+                    <th>Celular</th>
+                    <th>Cadastro</th>
+                    <th>Situação</th>
+                    <th class="num">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="alunos-lista">
+                  <tr><td colspan="6" class="empty-cell"><p class="msg-info">Carregando alunos...</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="alunos-paginacao"></div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

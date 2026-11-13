@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Usuários</title>
+    <meta name="description" content="Gestão da equipe da academia." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg>Equipe</span>
+          <h1>Usuários da Academia</h1>
+          <p>Crie acessos para a sua equipe e defina o que cada categoria pode fazer no sistema.</p>
+        </section>
+
+        <section class="grid grid--split">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>
+              <div>
+                <h2>Equipe</h2>
+                <p class="help">Quem tem acesso ao sistema nesta academia.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table aria-label="Usuários da academia">
+                <thead>
+                  <tr>
+                    <th class="col-name">Usuário</th>
+                    <th>Categoria</th>
+                    <th>Status</th>
+                    <th>Último acesso</th>
+                    <th class="num">Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="usuarios-lista">
+                  <tr><td colspan="5" class="empty-cell"><p class="msg-info">Carregando usuários...</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-user-plus"></use></svg></span>
+              <div>
+                <h2 id="usuario-form-title">Novo usuário</h2>
+                <p class="help">Campos marcados com <span class="req" aria-hidden="true">*</span> são obrigatórios.</p>
+              </div>
+            </div>
+
+            <form id="formUsuario">
+              <div class="field">
+                <label for="usr_nome">Nome <span class="req" aria-hidden="true">*</span></label>
+                <input id="usr_nome" type="text" required autocomplete="off" placeholder="Nome completo" />
+              </div>
+              <div class="field">
+                <label for="usr_email">E-mail de acesso <span class="req" aria-hidden="true">*</span></label>
+                <input id="usr_email" type="email" required autocomplete="off" placeholder="usuario@academia.com" />
+              </div>
+              <div class="field">
+                <label for="usr_perfil">Categoria <span class="req" aria-hidden="true">*</span></label>
+                <select id="usr_perfil" required>
+                  <option value="ATENDENTE">Atendente</option>
+                  <option value="PROFESSOR">Professor</option>
+                  <option value="GESTOR">Gestor</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="usr_senha" id="usr_senha_label">Senha provisória <span class="req" aria-hidden="true">*</span></label>
+                <input id="usr_senha" type="text" required minlength="6" autocomplete="new-password" placeholder="Mínimo de 6 caracteres" />
+              </div>
+              <label class="check-row" id="usr_ativo_row" hidden>
+                <input type="checkbox" id="usr_ativo" checked />
+                <span>Usuário ativo (desmarque para bloquear o acesso)</span>
+              </label>
+              <div class="form-actions">
+                <button class="btn btn--brand" type="submit" id="btn-salvar-usuario"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Cadastrar usuário</button>
+                <button class="btn btn--ghost" type="button" id="btn-cancelar-usuario" hidden>Cancelar</button>
+              </div>
+            </form>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-shield"></use></svg></span>
+              <div>
+                <h2>O que cada categoria pode fazer</h2>
+                <p class="help">As permissões são definidas pela categoria do usuário.</p>
+              </div>
+            </div>
+            <div class="table-wrap" id="matriz-permissoes">
+              <p class="msg-info">Carregando permissões...</p>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Empresas</title>
+    <meta name="description" content="Cadastro de academias no CCAM." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-building"></use></svg>Administração</span>
+          <h1>Empresas</h1>
+          <p>Cadastre as academias que usam o sistema. Cada uma tem seus próprios alunos, usuários e dados.</p>
+        </section>
+
+        <section class="grid">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-building"></use></svg></span>
+              <div>
+                <h2>Academias cadastradas</h2>
+                <p class="help">Desativar uma empresa bloqueia o acesso de todos os usuários dela, sem apagar dados.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table aria-label="Empresas cadastradas">
+                <thead>
+                  <tr>
+                    <th class="col-name">Empresa</th>
+                    <th>CNPJ</th>
+                    <th>Cidade</th>
+                    <th>Titular</th>
+                    <th>Status</th>
+                    <th class="num">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="empresas-lista">
+                  <tr><td colspan="6" class="empty-cell"><p class="msg-info">Carregando empresas...</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg></span>
+              <div>
+                <h2 id="empresa-form-title">Cadastrar nova empresa</h2>
+                <p class="help">Campos marcados com <span class="req" aria-hidden="true">*</span> são obrigatórios.</p>
+              </div>
+            </div>
+            <div id="empresa-form-host"></div>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="card" id="contatos-card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-message"></use></svg></span>
+              <div>
+                <h2>Contatos recebidos (Fale conosco)</h2>
+                <p class="help">Academias interessadas que deixaram o contato na tela de login.</p>
+              </div>
+            </div>
+
+            <div class="toolbar" id="contatos-filtros">
+              <div class="field toolbar__search">
+                <label for="contatos-busca" class="sr-only">Buscar contato</label>
+                <div class="input-wrap">
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                  <input id="contatos-busca" type="search" data-filter="busca" placeholder="Buscar por nome, e-mail, academia ou cidade" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="contatos-status" class="sr-only">Situação</label>
+                <select id="contatos-status" data-filter="status">
+                  <option value="pendentes" data-default>Pendentes</option>
+                  <option value="atendidos">Atendidos</option>
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table aria-label="Contatos recebidos">
+                <thead>
+                  <tr>
+                    <th class="col-name">Contato</th>
+                    <th>Academia</th>
+                    <th>Mensagem</th>
+                    <th>Recebido em</th>
+                    <th class="num">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="contatos-lista">
+                  <tr><td colspan="5" class="empty-cell"><p class="msg-info">Carregando contatos...</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="contatos-paginacao"></div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>
