@@ -2,11 +2,13 @@ package com.ccam.ccamv2.config;
 
 import com.ccam.ccamv2.model.Cliente;
 import com.ccam.ccamv2.model.Empresa;
+import com.ccam.ccamv2.model.Exercicio;
 import com.ccam.ccamv2.model.Financeiro;
 import com.ccam.ccamv2.model.Mural;
 import com.ccam.ccamv2.model.Usuario;
 import com.ccam.ccamv2.repository.ClienteRepository;
 import com.ccam.ccamv2.repository.EmpresaRepository;
+import com.ccam.ccamv2.repository.ExercicioRepository;
 import com.ccam.ccamv2.repository.FinanceiroRepository;
 import com.ccam.ccamv2.repository.MuralRepository;
 import com.ccam.ccamv2.repository.UsuarioRepository;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,6 +33,7 @@ public class DadosIniciais implements CommandLineRunner {
     private final ClienteRepository clientes;
     private final MuralRepository mural;
     private final FinanceiroRepository financeiro;
+    private final ExercicioRepository exercicios;
 
     private final String adminEmail;
     private final String adminSenha;
@@ -41,6 +45,7 @@ public class DadosIniciais implements CommandLineRunner {
                          ClienteRepository clientes,
                          MuralRepository mural,
                          FinanceiroRepository financeiro,
+                         ExercicioRepository exercicios,
                          @Value("${ccam.admin.email}") String adminEmail,
                          @Value("${ccam.admin.senha}") String adminSenha,
                          @Value("${ccam.seed.gestor-email}") String gestorEmail,
@@ -50,6 +55,7 @@ public class DadosIniciais implements CommandLineRunner {
         this.clientes = clientes;
         this.mural = mural;
         this.financeiro = financeiro;
+        this.exercicios = exercicios;
         this.adminEmail = adminEmail;
         this.adminSenha = adminSenha;
         this.gestorEmail = gestorEmail;
@@ -61,6 +67,52 @@ public class DadosIniciais implements CommandLineRunner {
         criarAdmin();
         criarEmpresaPadrao();
         migrarDadosAntigos();
+        try {
+            criarAlunoExemplo();
+        } catch (RuntimeException e) {
+            log.warn("Aluno de exemplo não foi criado: {}", e.getMessage());
+        }
+    }
+
+    private void criarAlunoExemplo() {
+        String email = "aluno@ccam.com";
+        String cpf = "11144477735";
+        List<Empresa> todas = empresas.findAllByOrderByRazaoSocialAsc();
+        if (todas.isEmpty() || clientes.findByEmailIgnoreCase(email).isPresent() || clientes.findByCpf(cpf).isPresent()) {
+            return;
+        }
+        Cliente aluno = new Cliente();
+        aluno.setEmpresaId(todas.get(0).getId());
+        aluno.setNome("Aluno Exemplo");
+        aluno.setEmail(email);
+        aluno.setCpf(cpf);
+        aluno.setTelefone("(62) 99999-0000");
+        aluno.setDataNascimento(LocalDate.now().withYear(2000));
+        aluno.setSexo("M");
+        aluno.setPeso(75.0);
+        aluno.setAltura(1.75);
+        aluno = clientes.save(aluno);
+
+        String[][] ficha = {
+                {"Segunda-feira", "Peito", "Supino reto", "4", "10", "20kg"},
+                {"Segunda-feira", "Tríceps", "Tríceps corda", "3", "12", "15kg"},
+                {"Quarta-feira", "Costas", "Puxada frontal", "4", "10", "30kg"},
+                {"Quarta-feira", "Bíceps", "Rosca direta", "3", "12", "10kg"},
+                {"Sexta-feira", "Pernas", "Agachamento livre", "4", "12", "30kg"},
+                {"Sexta-feira", "Abdomen", "Prancha", "3", "45 segundos", null}
+        };
+        for (String[] l : ficha) {
+            Exercicio ex = new Exercicio();
+            ex.setClienteId(aluno.getId());
+            ex.setDiaSemana(l[0]);
+            ex.setGrupoMuscular(l[1]);
+            ex.setNomeExercicio(l[2]);
+            ex.setSeries(l[3]);
+            ex.setRepeticoes(l[4]);
+            ex.setCarga(l[5]);
+            exercicios.save(ex);
+        }
+        log.info("Aluno de exemplo criado: {} (senha no app: o CPF)", email);
     }
 
     private void criarAdmin() {
