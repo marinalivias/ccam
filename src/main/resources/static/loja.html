@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCAM | Loja</title>
+    <meta name="description" content="Produtos da loja interna da academia." />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar" data-topbar></header>
+
+    <main id="conteudo">
+      <div class="container page">
+        <section class="hero">
+          <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-bag"></use></svg>Loja</span>
+          <h1>Loja da academia</h1>
+          <p>Produtos vendidos na recepção. Os alunos veem o catálogo no app.</p>
+        </section>
+
+        <section class="grid">
+          <article class="card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-cake"></use></svg></span>
+              <div>
+                <h2>Configuração</h2>
+                <p class="help">Se a academia não tem loja, deixe desligado e a aba some do app.</p>
+              </div>
+            </div>
+            <form id="formConfigLoja" class="loja-config">
+              <label class="check-row" for="loja_ativa">
+                <input type="checkbox" id="loja_ativa" />
+                <span>Mostrar a loja no app dos alunos</span>
+              </label>
+              <div class="field">
+                <label for="loja_desconto">Desconto de aniversário (%)</label>
+                <input type="number" id="loja_desconto" min="0" max="90" step="1" />
+              </div>
+              <p class="help">No dia do aniversário, o aluno vê esse desconto nos produtos marcados com "desconto de aniversário".</p>
+              <div class="form-actions">
+                <button class="btn btn--brand" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Salvar configuração</button>
+              </div>
+            </form>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="card" id="produtos-card">
+            <div class="card__head">
+              <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-bag"></use></svg></span>
+              <div>
+                <h2>Produtos</h2>
+                <p class="help">Cadastre, edite e apague os produtos. Produtos ocultos não aparecem no app.</p>
+              </div>
+              <button type="button" class="btn btn--brand" id="btn-novo-produto" style="margin-left:auto"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Novo produto</button>
+            </div>
+
+            <div class="toolbar" id="produtos-filtros">
+              <div class="field toolbar__search">
+                <label for="produtos-busca" class="sr-only">Buscar produto</label>
+                <div class="input-wrap">
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                  <input id="produtos-busca" type="search" data-filter="busca" placeholder="Buscar por nome ou categoria" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="produtos-status" class="sr-only">Situação</label>
+                <select id="produtos-status" data-filter="status">
+                  <option value="todos" data-default>Todos</option>
+                  <option value="visiveis">Visíveis no app</option>
+                  <option value="ocultos">Ocultos</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table aria-label="Produtos da loja">
+                <thead>
+                  <tr>
+                    <th class="col-name">Produto</th>
+                    <th>Categoria</th>
+                    <th class="num">Preço</th>
+                    <th>No app</th>
+                    <th class="num">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="produtos-lista">
+                  <tr><td colspan="5" class="empty-cell"><p class="msg-info">Carregando produtos...</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="produtos-paginacao"></div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer" data-footer></footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

@@ -1,4 +1,13 @@
 package com.ccam.ccamv2.dto;
 
-public record AniversarianteResponse(String nome, int dia, int mes, boolean hoje, boolean voce) {
+import java.util.UUID;
+
+public record AniversarianteResponse(
+        UUID id,
+        String nome,
+        int dia,
+        int mes,
+        boolean hoje,
+        boolean voce,
+        boolean parabensEnviado) {
 }

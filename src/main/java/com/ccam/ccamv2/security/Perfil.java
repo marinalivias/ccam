@@ -17,6 +17,7 @@ public enum Perfil {
             MURAL_VER, MURAL_PUBLICAR,
             CRM_VER,
             EMPRESA_VER, EMPRESA_EDITAR,
+            LOJA_GERENCIAR,
             USUARIOS_GERENCIAR)),
 
     PROFESSOR("Professor", EnumSet.of(
