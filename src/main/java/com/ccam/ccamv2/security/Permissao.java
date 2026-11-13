@@ -1,0 +1,18 @@
+package com.ccam.ccamv2.security;
+
+public enum Permissao {
+    ALUNOS_VER,
+    ALUNOS_EDITAR,
+    TREINOS_VER,
+    TREINOS_EDITAR,
+    FINANCEIRO_VER,
+    FINANCEIRO_LANCAR,
+    FINANCEIRO_EDITAR,
+    MURAL_VER,
+    MURAL_PUBLICAR,
+    CRM_VER,
+    EMPRESA_VER,
+    EMPRESA_EDITAR,
+    USUARIOS_GERENCIAR,
+    EMPRESAS_GERENCIAR
+}
