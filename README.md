@@ -1,11 +1,6 @@
 # CCAM
 
-Sistema web para gestão de academias de pequeno e médio porte. TCC.
-
-A academia entra em contato, a gente cadastra a empresa e o gestor passa a usar o sistema:
-alunos, treinos, financeiro, mural de avisos e usuários da equipe.
-
-O app do aluno (Flutter) fica em outro repositório.
+Sistema web para gestão de academias de pequeno e médio porte.
 
 ## Tecnologias
 
