@@ -598,6 +598,23 @@
     });
   };
 
+  const rotularTabela = (table) => {
+    const titulos = Array.from(table.tHead?.rows[0]?.cells || []).map((th) => th.textContent.trim());
+    Array.from(table.tBodies[0]?.rows || []).forEach((tr) => {
+      Array.from(tr.cells).forEach((td, i) => {
+        if (titulos[i] && !td.classList.contains("empty-cell")) td.dataset.label = titulos[i];
+      });
+    });
+  };
+
+  const wireTabelasResponsivas = () => {
+    document.querySelectorAll(".table-wrap table:not(.matrix)").forEach((table) => {
+      if (!table.tBodies[0]) return;
+      rotularTabela(table);
+      new MutationObserver(() => rotularTabela(table)).observe(table.tBodies[0], { childList: true });
+    });
+  };
+
   const linhaTabela = (cols, html) => `<tr><td colspan="${cols}" class="empty-cell">${html}</td></tr>`;
 
   // Estrutura comum
@@ -1186,9 +1203,9 @@
         <td>${esc(formatDate(a.dataCadastro))}${a.dataAtualizacao ? `<span class="cell-sub">Alterado em ${esc(formatDate(a.dataAtualizacao))}</span>` : ""}</td>
         <td><span class="badge ${a.ativo ? "badge--ok" : "badge--danger"}">${a.ativo ? "Ativo" : "Inativo"}</span></td>
         <td class="num"><div class="row-actions">
-          ${podeEditar ? `<button type="button" class="btn btn--sm" data-acao="editar" data-id="${esc(a.id)}">${icon("edit")}Editar</button>` : ""}
-          <button type="button" class="btn btn--sm btn--ghost" data-acao="historico" data-id="${esc(a.id)}">${icon("history")}Histórico</button>
-          ${podeEditar ? `<button type="button" class="btn btn--sm ${a.ativo ? "btn--danger" : "btn--success"}" data-acao="ativo" data-id="${esc(a.id)}">${icon("power")}${a.ativo ? "Inativar" : "Reativar"}</button>` : ""}
+          ${podeEditar ? `<button type="button" class="btn btn--sm" data-acao="editar" data-id="${esc(a.id)}" title="Editar">${icon("edit")}<span class="btn__label">Editar</span></button>` : ""}
+          <button type="button" class="btn btn--sm btn--ghost" data-acao="historico" data-id="${esc(a.id)}" title="Histórico">${icon("history")}<span class="btn__label">Histórico</span></button>
+          ${podeEditar ? `<button type="button" class="btn btn--sm ${a.ativo ? "btn--danger" : "btn--success"}" data-acao="ativo" data-id="${esc(a.id)}" title="${a.ativo ? "Inativar" : "Reativar"}">${icon("power")}<span class="btn__label">${a.ativo ? "Inativar" : "Reativar"}</span></button>` : ""}
         </div></td>
       </tr>`;
 
@@ -2376,6 +2393,7 @@
     wireConfirmables();
     wireFormHints();
     wireLogout();
+    wireTabelasResponsivas();
     showFlash();
 
     wireLoginForm();
