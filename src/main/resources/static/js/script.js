@@ -2547,7 +2547,19 @@
   };
 
   // Inicializacao
-  document.addEventListener("DOMContentLoaded", () => {
+  const atualizarUsuario = async () => {
+    const session = loadSession();
+    if (!session || PUBLIC_PAGES.includes(getPath())) return;
+    try {
+      const usuario = await api("/auth/me");
+      if (usuario && JSON.stringify(usuario) !== JSON.stringify(session.usuario)) {
+        saveSession({ ...session, usuario });
+      }
+    } catch {}
+  };
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await atualizarUsuario();
     if (!enforceAuth()) return;
     mountChrome();
     applyPermissions();
