@@ -13,6 +13,7 @@ public enum Permissao {
     CRM_VER,
     EMPRESA_VER,
     EMPRESA_EDITAR,
+    LOJA_GERENCIAR,
     USUARIOS_GERENCIAR,
     EMPRESAS_GERENCIAR
 }

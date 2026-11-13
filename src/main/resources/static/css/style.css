@@ -2935,3 +2935,18 @@ tr.is-inactive td strong {
 .bday.is-today {
   background: rgba(34, 197, 94, .08);
 }
+
+/* Loja */
+.loja-config {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+
+.fgrid .check-row {
+  margin: 0;
+}
+
+#produtos-card .card__head {
+  flex-wrap: wrap;
+}

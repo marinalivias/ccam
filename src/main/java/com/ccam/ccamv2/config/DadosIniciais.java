@@ -1,16 +1,20 @@
 package com.ccam.ccamv2.config;
 
 import com.ccam.ccamv2.model.Cliente;
+import com.ccam.ccamv2.model.ConfigLoja;
 import com.ccam.ccamv2.model.Empresa;
 import com.ccam.ccamv2.model.Exercicio;
 import com.ccam.ccamv2.model.Financeiro;
 import com.ccam.ccamv2.model.Mural;
+import com.ccam.ccamv2.model.Produto;
 import com.ccam.ccamv2.model.Usuario;
 import com.ccam.ccamv2.repository.ClienteRepository;
+import com.ccam.ccamv2.repository.ConfigLojaRepository;
 import com.ccam.ccamv2.repository.EmpresaRepository;
 import com.ccam.ccamv2.repository.ExercicioRepository;
 import com.ccam.ccamv2.repository.FinanceiroRepository;
 import com.ccam.ccamv2.repository.MuralRepository;
+import com.ccam.ccamv2.repository.ProdutoRepository;
 import com.ccam.ccamv2.repository.UsuarioRepository;
 import com.ccam.ccamv2.security.Perfil;
 import com.ccam.ccamv2.security.SenhaUtil;
@@ -34,6 +38,8 @@ public class DadosIniciais implements CommandLineRunner {
     private final MuralRepository mural;
     private final FinanceiroRepository financeiro;
     private final ExercicioRepository exercicios;
+    private final ProdutoRepository produtos;
+    private final ConfigLojaRepository configLoja;
 
     private final String adminEmail;
     private final String adminSenha;
@@ -46,6 +52,8 @@ public class DadosIniciais implements CommandLineRunner {
                          MuralRepository mural,
                          FinanceiroRepository financeiro,
                          ExercicioRepository exercicios,
+                         ProdutoRepository produtos,
+                         ConfigLojaRepository configLoja,
                          @Value("${ccam.admin.email}") String adminEmail,
                          @Value("${ccam.admin.senha}") String adminSenha,
                          @Value("${ccam.seed.gestor-email}") String gestorEmail,
@@ -56,6 +64,8 @@ public class DadosIniciais implements CommandLineRunner {
         this.mural = mural;
         this.financeiro = financeiro;
         this.exercicios = exercicios;
+        this.produtos = produtos;
+        this.configLoja = configLoja;
         this.adminEmail = adminEmail;
         this.adminSenha = adminSenha;
         this.gestorEmail = gestorEmail;
@@ -69,20 +79,53 @@ public class DadosIniciais implements CommandLineRunner {
         migrarDadosAntigos();
         try {
             criarAlunoExemplo();
+            criarLojaExemplo();
         } catch (RuntimeException e) {
-            log.warn("Aluno de exemplo não foi criado: {}", e.getMessage());
+            log.warn("Dados de exemplo não foram criados: {}", e.getMessage());
         }
+    }
+
+    private void criarLojaExemplo() {
+        UUID empresaId = usuarios.findByEmailIgnoreCase(gestorEmail.trim()).map(Usuario::getEmpresaId).orElse(null);
+        if (empresaId == null || configLoja.existsById(empresaId)) {
+            return;
+        }
+        ConfigLoja config = new ConfigLoja();
+        config.setEmpresaId(empresaId);
+        config.setAtiva(true);
+        config.setDescontoAniversario(15);
+        configLoja.save(config);
+
+        Object[][] itens = {
+                {"Whey protein 900g", "Suplementos", 149.90, true, "Sabor chocolate"},
+                {"Creatina 300g", "Suplementos", 89.90, true, null},
+                {"Garrafa térmica 1L", "Acessórios", 49.90, true, "Mantém a água gelada por 12 horas"},
+                {"Camiseta da academia", "Roupas", 59.90, false, "Tamanhos P, M, G e GG"},
+                {"Barra de proteína", "Lanches", 9.90, false, null}
+        };
+        for (Object[] i : itens) {
+            Produto p = new Produto();
+            p.setEmpresaId(empresaId);
+            p.setNome((String) i[0]);
+            p.setCategoria((String) i[1]);
+            p.setPreco((Double) i[2]);
+            p.setDescontoAniversario((Boolean) i[3]);
+            p.setDescricao((String) i[4]);
+            p.setAtivo(true);
+            produtos.save(p);
+        }
+        log.info("Loja de exemplo criada com {} produtos", itens.length);
     }
 
     private void criarAlunoExemplo() {
         String email = "aluno@ccam.com";
         String cpf = "11144477735";
-        List<Empresa> todas = empresas.findAllByOrderByRazaoSocialAsc();
-        if (todas.isEmpty() || clientes.findByEmailIgnoreCase(email).isPresent() || clientes.findByCpf(cpf).isPresent()) {
+        UUID empresaId = usuarios.findByEmailIgnoreCase(gestorEmail.trim()).map(Usuario::getEmpresaId).orElse(null);
+        if (empresaId == null || clientes.findByEmailIgnoreCase(email).isPresent() || clientes.findByCpf(cpf).isPresent()) {
             return;
         }
         Cliente aluno = new Cliente();
-        aluno.setEmpresaId(todas.get(0).getId());
+        aluno.setEmpresaId(empresaId);
         aluno.setNome("Aluno Exemplo");
         aluno.setEmail(email);
         aluno.setCpf(cpf);

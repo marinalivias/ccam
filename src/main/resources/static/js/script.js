@@ -15,6 +15,7 @@
     "empresa.html": ["EMPRESA_VER"],
     "mural.html": ["MURAL_VER"],
     "crm.html": ["CRM_VER"],
+    "loja.html": ["LOJA_GERENCIAR"],
     "usuarios.html": ["USUARIOS_GERENCIAR"],
     "empresas.html": ["EMPRESAS_GERENCIAR"]
   };
@@ -118,6 +119,7 @@
     "chevron-right": '<path d="m9 6 6 6-6 6"/>',
     "send": '<path d="M21 3 10 14"/><path d="M21 3 14.5 21l-4.5-7-7-4.5z"/>',
     "message": '<path d="M4 5.5h16v11H9l-5 4z"/>',
+    "bag": '<path d="M5 8h14l-1.2 12.5H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
     "instagram": '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.2 6.8h.01"/>',
     "facebook": '<path d="M14.5 21v-7.5h2.8l.4-3.2h-3.2V8.4c0-.9.3-1.6 1.6-1.6h1.7V4a20 20 0 0 0-2.5-.1c-2.5 0-4.1 1.5-4.1 4.2v2.2H8.4v3.2h2.8V21"/>',
     "linkedin": '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M8 10.5V16.5M8 7.5h.01"/><path d="M11.5 16.5v-6M11.5 13a2.5 2.5 0 0 1 5 0v3.5"/>',
@@ -626,6 +628,7 @@
     { href: "empresa.html", label: "Empresa", icon: "building" },
     { href: "mural.html", label: "Mural", icon: "megaphone" },
     { href: "crm.html", label: "CRM", icon: "chart" },
+    { href: "loja.html", label: "Loja", icon: "bag" },
     { href: "usuarios.html", label: "Usuários", icon: "users" },
     { href: "empresas.html", label: "Empresas", icon: "building" }
   ];
@@ -2250,6 +2253,143 @@
     lista.load();
   };
 
+  // Loja
+  const produtoFormHtml = (p = {}) => `
+    <div class="fgrid">
+      <div class="field col-4"><label for="pr_nome">Nome <span class="req" aria-hidden="true">*</span></label>
+        <input id="pr_nome" name="nome" type="text" maxlength="120" required value="${esc(p.nome)}" placeholder="Ex: Whey protein 900g" /></div>
+      <div class="field col-2"><label for="pr_preco">Preço (R$) <span class="req" aria-hidden="true">*</span></label>
+        <input id="pr_preco" name="preco" type="number" min="0.01" step="0.01" inputmode="decimal" required value="${esc(p.preco)}" placeholder="Ex: 129.90" /></div>
+      <div class="field col-6"><label for="pr_categoria">Categoria</label>
+        <input id="pr_categoria" name="categoria" type="text" maxlength="60" value="${esc(p.categoria)}" placeholder="Ex: Suplementos, Roupas, Acessórios" /></div>
+      <div class="field col-6"><label for="pr_descricao">Descrição</label>
+        <textarea id="pr_descricao" name="descricao" rows="3" maxlength="500" placeholder="Detalhes que ajudam o aluno a escolher">${esc(p.descricao)}</textarea></div>
+      <label class="check-row col-6" for="pr_ativo"><input type="checkbox" id="pr_ativo" name="ativo" ${p.ativo === false ? "" : "checked"} /><span>Mostrar no app dos alunos</span></label>
+      <label class="check-row col-6" for="pr_desconto"><input type="checkbox" id="pr_desconto" name="descontoAniversario" ${p.descontoAniversario ? "checked" : ""} /><span>Entra no desconto de aniversário</span></label>
+    </div>`;
+
+  const lerProduto = (form) => ({
+    nome: form.elements.nome.value.trim(),
+    preco: parseFloat(form.elements.preco.value),
+    categoria: form.elements.categoria.value.trim() || null,
+    descricao: form.elements.descricao.value.trim() || null,
+    ativo: form.elements.ativo.checked,
+    descontoAniversario: form.elements.descontoAniversario.checked
+  });
+
+  const wireLoja = () => {
+    const tbody = document.getElementById("produtos-lista");
+    const formConfig = document.getElementById("formConfigLoja");
+    if (!tbody || !formConfig) return;
+    const COLS = 5;
+    let itens = new Map();
+
+    const campoAtiva = document.getElementById("loja_ativa");
+    const campoDesconto = document.getElementById("loja_desconto");
+    api("/loja/config").then((c) => {
+      campoAtiva.checked = c.ativa;
+      campoDesconto.value = c.descontoAniversario;
+    }).catch((err) => fail("Não foi possível carregar a configuração", err));
+
+    formConfig.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = formConfig.querySelector('button[type="submit"]');
+      setBusy(btn, true, "Salvando...");
+      try {
+        await api("/loja/config", { method: "PUT", body: { ativa: campoAtiva.checked, descontoAniversario: parseInt(campoDesconto.value || "0", 10) } });
+        ui.toast({ type: "success", title: "Configuração salva", message: campoAtiva.checked ? "A loja aparece no app dos alunos." : "A loja ficou oculta no app." });
+      } catch (err) {
+        fail("Não foi possível salvar", err);
+      } finally {
+        setBusy(btn, false);
+      }
+    });
+
+    const lista = pagedList({
+      pagerHost: document.getElementById("produtos-paginacao"),
+      scrollTarget: document.getElementById("produtos-card"),
+      filters: { busca: "", status: "todos" },
+      fetchPage: (p) => api(`/loja/produtos${queryString(p)}`),
+      render: (pg, f) => {
+        itens = new Map(pg.itens.map((p) => [p.id, p]));
+        if (pg.itens.length === 0) {
+          tbody.innerHTML = linhaTabela(COLS, stateBlock({
+            icon: "bag",
+            title: f.busca || f.status !== "todos" ? "Nenhum produto encontrado" : "Nenhum produto cadastrado",
+            text: "Use o botão Novo produto para montar o catálogo."
+          }));
+          return;
+        }
+        tbody.innerHTML = pg.itens.map((p) => `
+          <tr class="${p.ativo ? "" : "is-inactive"}">
+            <td class="col-name"><strong>${esc(p.nome)}</strong>${p.descricao ? `<span class="cell-sub">${esc(p.descricao)}</span>` : ""}</td>
+            <td>${esc(p.categoria || "--")}</td>
+            <td class="num">${esc(formatMoney(p.preco))}${p.descontoAniversario ? '<span class="cell-sub">Desconto de aniversário</span>' : ""}</td>
+            <td><span class="badge ${p.ativo ? "badge--ok" : "badge--plain"}">${p.ativo ? "Visível" : "Oculto"}</span></td>
+            <td class="num"><div class="row-actions">
+              <button type="button" class="btn btn--sm" data-produto="editar" data-id="${esc(p.id)}" title="Editar">${icon("edit")}<span class="btn__label">Editar</span></button>
+              <button type="button" class="btn btn--sm btn--danger" data-produto="apagar" data-id="${esc(p.id)}" title="Apagar">${icon("trash")}<span class="btn__label">Apagar</span></button>
+            </div></td>
+          </tr>`).join("");
+      },
+      renderError: (err) => {
+        tbody.innerHTML = linhaTabela(COLS, stateBlock({ icon: "x-circle", error: true, title: "Não foi possível carregar os produtos", text: friendlyError(err) }));
+      }
+    });
+    wireFilters(document.getElementById("produtos-filtros"), lista);
+
+    document.getElementById("btn-novo-produto").addEventListener("click", async () => {
+      const ok = await ui.dialog({
+        title: "Novo produto",
+        html: produtoFormHtml(),
+        confirmText: "Cadastrar produto",
+        wide: true,
+        onConfirm: (form) => api("/loja/produtos", { method: "POST", body: lerProduto(form) })
+      });
+      if (ok) {
+        ui.toast({ type: "success", title: "Produto cadastrado", message: ok.nome || "" });
+        lista.load();
+      }
+    });
+
+    tbody.addEventListener("click", async (e) => {
+      const alvo = e.target instanceof Element ? e.target.closest("[data-produto]") : null;
+      if (!alvo) return;
+      const p = itens.get(alvo.dataset.id);
+      if (!p) return;
+      if (alvo.dataset.produto === "editar") {
+        const ok = await ui.dialog({
+          title: "Editar produto",
+          html: produtoFormHtml(p),
+          confirmText: "Salvar alterações",
+          wide: true,
+          onConfirm: (form) => api(`/loja/produtos/${encodeURIComponent(p.id)}`, { method: "PUT", body: lerProduto(form) })
+        });
+        if (ok) {
+          ui.toast({ type: "success", title: "Produto atualizado", message: p.nome });
+          lista.load();
+        }
+        return;
+      }
+      const confirmado = await ui.confirm({
+        title: "Apagar produto?",
+        message: `${p.nome} sai do catálogo e do app. Esta ação não pode ser desfeita.`,
+        confirmText: "Apagar",
+        danger: true
+      });
+      if (!confirmado) return;
+      try {
+        await api(`/loja/produtos/${encodeURIComponent(p.id)}`, { method: "DELETE" });
+        ui.toast({ type: "success", title: "Produto apagado", message: p.nome });
+        lista.load();
+      } catch (err) {
+        fail("Não foi possível apagar", err);
+      }
+    });
+
+    lista.load();
+  };
+
   // Usuarios da empresa
   const PERM_LABELS = [
     ["ALUNOS_VER", "Consultar alunos"],
@@ -2264,6 +2404,7 @@
     ["CRM_VER", "Consultar o CRM"],
     ["EMPRESA_VER", "Ver dados da empresa"],
     ["EMPRESA_EDITAR", "Editar dados da empresa"],
+    ["LOJA_GERENCIAR", "Gerenciar a loja"],
     ["USUARIOS_GERENCIAR", "Gerenciar usuários"]
   ];
 
@@ -2437,5 +2578,6 @@
     wireEmpresasAdmin();
     wireContatosAdmin();
     wireUsuarios();
+    wireLoja();
   });
 })();

@@ -34,11 +34,15 @@ public class AppAlunoController {
     private final ClienteRepository clientes;
     private final FrequenciaService frequencia;
     private final LogService logService;
+    private final ProdutoRepository produtos;
+    private final LojaService lojaService;
+    private final ParabensRepository parabens;
 
     public AppAlunoController(AlunoAuthService authService, ExercicioRepository exercicios,
                               CatalogoExercicioRepository catalogo, TreinoRealizadoRepository realizados,
                               MuralRepository mural, FinanceiroRepository financeiro, ClienteRepository clientes,
-                              FrequenciaService frequencia, LogService logService) {
+                              FrequenciaService frequencia, LogService logService,
+                              ProdutoRepository produtos, LojaService lojaService, ParabensRepository parabens) {
         this.authService = authService;
         this.exercicios = exercicios;
         this.catalogo = catalogo;
@@ -48,6 +52,9 @@ public class AppAlunoController {
         this.clientes = clientes;
         this.frequencia = frequencia;
         this.logService = logService;
+        this.produtos = produtos;
+        this.lojaService = lojaService;
+        this.parabens = parabens;
     }
 
     @PostMapping("/login")
@@ -200,20 +207,87 @@ public class AppAlunoController {
         YearMonth m = Paginacao.mes(mes);
         int numeroMes = (m != null ? m : YearMonth.now()).getMonthValue();
         LocalDate hoje = LocalDate.now();
+        Set<UUID> jaEnviados = parabens.findByRemetenteIdAndAno(aluno.getId(), hoje.getYear()).stream()
+                .map(Parabens::getDestinatarioId).collect(Collectors.toSet());
         return clientes.findByEmpresaIdAndAtivoTrueOrderByNomeAsc(aluno.getEmpresaId()).stream()
                 .filter(c -> c.getDataNascimento() != null && c.getDataNascimento().getMonthValue() == numeroMes)
                 .sorted(Comparator.comparingInt((Cliente c) -> c.getDataNascimento().getDayOfMonth()).thenComparing(Cliente::getNome))
-                .map(c -> new AniversarianteResponse(nomeCurto(c.getNome()), c.getDataNascimento().getDayOfMonth(), numeroMes,
-                        c.getDataNascimento().getMonthValue() == hoje.getMonthValue()
-                                && c.getDataNascimento().getDayOfMonth() == hoje.getDayOfMonth(),
-                        c.getId().equals(aluno.getId())))
+                .map(c -> new AniversarianteResponse(c.getId(), nomeCurto(c.getNome()), c.getDataNascimento().getDayOfMonth(), numeroMes,
+                        aniversarioHoje(c, hoje), c.getId().equals(aluno.getId()), jaEnviados.contains(c.getId())))
                 .toList();
+    }
+
+    @PostMapping("/parabens/{destinatarioId}")
+    @Transactional
+    public ResponseEntity<Map<String, String>> mandarParabens(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
+                                                              @PathVariable UUID destinatarioId) {
+        LocalDate hoje = LocalDate.now();
+        Cliente destino = clientes.findById(destinatarioId)
+                .filter(c -> c.isAtivo() && Objects.equals(c.getEmpresaId(), aluno.getEmpresaId()))
+                .orElseThrow(() -> new NegocioException("Aluno não encontrado."));
+        if (destino.getId().equals(aluno.getId())) {
+            throw new NegocioException("Você não pode mandar parabéns para você mesmo.");
+        }
+        if (!aniversarioHoje(destino, hoje)) {
+            throw new NegocioException("Só dá para mandar parabéns no dia do aniversário.");
+        }
+        if (parabens.existsByRemetenteIdAndDestinatarioIdAndAno(aluno.getId(), destino.getId(), hoje.getYear())) {
+            throw new NegocioException("Você já mandou parabéns para " + nomeCurto(destino.getNome()) + " este ano.");
+        }
+        Parabens p = new Parabens();
+        p.setEmpresaId(aluno.getEmpresaId());
+        p.setRemetenteId(aluno.getId());
+        p.setDestinatarioId(destino.getId());
+        p.setAno(hoje.getYear());
+        parabens.save(p);
+        return ResponseEntity.ok(Map.of("mensagem", "Parabéns enviado para " + nomeCurto(destino.getNome()) + "!"));
+    }
+
+    @GetMapping("/notificacoes")
+    public Map<String, Object> notificacoes(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        List<Parabens> lista = parabens.findTop50ByDestinatarioIdAndCriadoEmAfterOrderByCriadoEmDesc(
+                aluno.getId(), LocalDateTime.now().minusDays(60));
+        Map<UUID, String> nomes = clientes.findAllById(lista.stream().map(Parabens::getRemetenteId).collect(Collectors.toSet()))
+                .stream().collect(Collectors.toMap(Cliente::getId, c -> nomeCurto(c.getNome())));
+        List<NotificacaoResponse> itens = lista.stream()
+                .map(p -> new NotificacaoResponse(p.getId(), nomes.getOrDefault(p.getRemetenteId(), "Um colega"), p.getCriadoEm(), p.isLido()))
+                .toList();
+        return Map.of("naoLidas", parabens.countByDestinatarioIdAndLidoFalse(aluno.getId()), "itens", itens);
+    }
+
+    @PostMapping("/notificacoes/lidas")
+    @Transactional
+    public ResponseEntity<Void> marcarLidas(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        parabens.marcarLidos(aluno.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/loja")
+    public LojaAppResponse loja(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        ConfigLoja config = lojaService.config(aluno.getEmpresaId());
+        if (!config.isAtiva()) {
+            return new LojaAppResponse(false, 0, false, List.of());
+        }
+        boolean aniversario = aniversarioHoje(aluno, LocalDate.now());
+        int desconto = config.getDescontoAniversario();
+        List<ProdutoApp> lista = produtos.findByEmpresaIdAndAtivoTrueOrderByCategoriaAscNomeAsc(aluno.getEmpresaId()).stream()
+                .map(p -> new ProdutoApp(p.getId(), p.getNome(), p.getDescricao(), p.getCategoria(), p.getPreco(),
+                        aniversario && p.isDescontoAniversario() && desconto > 0 ? LojaService.comDesconto(p.getPreco(), desconto) : p.getPreco(),
+                        p.isDescontoAniversario()))
+                .toList();
+        return new LojaAppResponse(true, desconto, aniversario, lista);
     }
 
     @GetMapping("/financeiro")
     public List<FinanceiroResponse> financeiro(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
         return financeiro.findByClienteIdOrderByVencimentoDesc(aluno.getId()).stream()
                 .map(f -> FinanceiroResponse.de(f, aluno)).toList();
+    }
+
+    private static boolean aniversarioHoje(Cliente c, LocalDate hoje) {
+        return c.getDataNascimento() != null
+                && c.getDataNascimento().getMonthValue() == hoje.getMonthValue()
+                && c.getDataNascimento().getDayOfMonth() == hoje.getDayOfMonth();
     }
 
     private Exercicio doAluno(Cliente aluno, UUID id) {

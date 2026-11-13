@@ -18,6 +18,7 @@ public class LogService {
     public static final String TREINO = "TREINO";
     public static final String FINANCEIRO = "FINANCEIRO";
     public static final String AVISO = "AVISO";
+    public static final String PRODUTO = "PRODUTO";
 
     public static final String CRIACAO = "CRIACAO";
     public static final String EDICAO = "EDICAO";

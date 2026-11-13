@@ -23,6 +23,6 @@ Na primeira execução o sistema cria as tabelas, a academia de exemplo e os log
 ## Perfis
 
 - **Administrador:** cadastra as academias.
-- **Gestor:** controla tudo da academia. Só ele altera ou exclui lançamentos do financeiro.
+- **Gestor:** controla tudo da academia, inclusive a loja. Só ele altera ou exclui lançamentos do financeiro.
 - **Professor:** consulta alunos e monta os treinos.
 - **Atendente:** cadastra alunos, lança mensalidades e publica avisos.
