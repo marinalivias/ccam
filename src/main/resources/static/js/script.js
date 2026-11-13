@@ -1687,12 +1687,37 @@
   const loadCRMData = async () => {
     const kpiTotal = document.getElementById("kpi-total-alunos");
     if (!kpiTotal) return;
+    const kpiFreq = document.getElementById("kpi-frequentes");
+    const kpiNovos = document.getElementById("kpi-novatos");
+    const ausentes = document.getElementById("tabela-ausentes");
+    const aniversariantes = document.getElementById("lista-aniversariantes");
+
     try {
-      const clientes = await api("/clientes");
-      if (clientes) kpiTotal.textContent = clientes.length;
+      const r = await api("/crm/resumo");
+      kpiTotal.textContent = r.alunosAtivos;
+      kpiFreq.textContent = r.treinaramSemana;
+      kpiNovos.textContent = r.novatosMes;
+
+      ausentes.innerHTML = r.ausentes.length
+        ? r.ausentes.map((a) => `<tr>
+            <td class="col-name"><strong>${esc(a.nome)}</strong></td>
+            <td>${a.ultimoTreino ? esc(formatDate(a.ultimoTreino)) : "--"}</td>
+            <td><span class="badge ${a.ultimoTreino ? "badge--warn" : "badge--danger"}">${a.ultimoTreino ? `${a.diasSemTreinar} dias` : "Nunca registrou"}</span></td>
+          </tr>`).join("")
+        : linhaTabela(3, stateBlock({ icon: "check-circle", title: "Ninguém ausente", text: "Todos os alunos ativos treinaram nos últimos 15 dias." }));
+
+      aniversariantes.innerHTML = r.aniversariantes.length
+        ? r.aniversariantes.map((a) => `<li class="bday${a.hoje ? " is-today" : ""}">
+            <span class="avatar" aria-hidden="true">${esc(initials(a.nome))}</span>
+            <span class="bday__body"><strong>${esc(a.nome)}</strong><span>Dia ${String(a.dia).padStart(2, "0")}</span></span>
+            ${a.hoje ? '<span class="badge badge--ok">Hoje</span>' : ""}
+          </li>`).join("")
+        : `<li class="is-empty">${stateBlock({ icon: "cake", title: "Nenhum aniversariante", text: "Nenhum aluno ativo faz aniversário este mês." })}</li>`;
     } catch (err) {
-      console.error("Erro CRM:", err);
-      kpiTotal.textContent = "--";
+      if (err?.status === 401) return;
+      [kpiTotal, kpiFreq, kpiNovos].forEach((el) => { el.textContent = "--"; });
+      ausentes.innerHTML = linhaTabela(3, stateBlock({ icon: "x-circle", error: true, title: "Não foi possível carregar", text: friendlyError(err) }));
+      aniversariantes.innerHTML = "";
     }
   };
 

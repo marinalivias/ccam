@@ -1,5 +1,6 @@
 package com.ccam.ccamv2.service;
 
+import com.ccam.ccamv2.model.Cliente;
 import com.ccam.ccamv2.model.LogAlteracao;
 import com.ccam.ccamv2.model.Usuario;
 import com.ccam.ccamv2.repository.LogAlteracaoRepository;
@@ -28,6 +29,19 @@ public class LogService {
 
     public LogService(LogAlteracaoRepository repository) {
         this.repository = repository;
+    }
+
+    public void registrarPeloAluno(Cliente aluno, String entidade, UUID registroId, String acao, String descricao) {
+        LogAlteracao log = new LogAlteracao();
+        log.setEmpresaId(aluno.getEmpresaId());
+        log.setEntidade(entidade);
+        log.setRegistroId(registroId);
+        log.setAlunoId(aluno.getId());
+        log.setAcao(acao);
+        log.setDescricao(descricao);
+        log.setUsuarioNome(aluno.getNome() + " (aluno, pelo app)");
+        log.setDataHora(LocalDateTime.now());
+        repository.save(log);
     }
 
     public void registrar(Usuario autor, String entidade, UUID registroId, UUID alunoId, String acao, String descricao) {

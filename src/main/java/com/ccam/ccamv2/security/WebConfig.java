@@ -7,13 +7,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     private final AuthInterceptor authInterceptor;
+    private final AlunoInterceptor alunoInterceptor;
 
-    public WebConfig(AuthInterceptor authInterceptor) {
+    public WebConfig(AuthInterceptor authInterceptor, AlunoInterceptor alunoInterceptor) {
         this.authInterceptor = authInterceptor;
+        this.alunoInterceptor = alunoInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor).addPathPatterns("/api/**");
+        registry.addInterceptor(authInterceptor).addPathPatterns("/api/**").excludePathPatterns("/api/app/**");
+        registry.addInterceptor(alunoInterceptor).addPathPatterns("/api/app/**");
     }
 }
