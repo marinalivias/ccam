@@ -11,7 +11,7 @@ Sistema web para gestão de academias de pequeno e médio porte.
 ## Como rodar
 
 1. Crie um banco no PostgreSQL chamado `ccam`.
-2. Copie o `.env.example` para `.env` e preencha as senhas.
+2. Copie o `.env.example` para `.env` e preencha a senha do banco.
 3. Rode:
 
 ```
@@ -21,6 +21,15 @@ Sistema web para gestão de academias de pequeno e médio porte.
 4. Abra http://localhost:8081
 
 As tabelas são criadas na primeira execução, junto com o administrador e o gestor definidos no `.env`.
+
+## Login de exemplo
+
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Administrador | admin@ccam.com | admin123 |
+| Gestor | gestor@formulafitness.com | gestor123 |
+
+Troque as senhas em "Minha conta" se for usar fora do computador local.
 
 ## Perfis
 
