@@ -39,3 +39,10 @@ Troque as senhas em "Minha conta" se for usar fora do computador local.
 - **Atendente:** cadastra alunos, lança mensalidades e publica avisos.
 
 Só o gestor pode alterar ou excluir lançamentos do financeiro.
+
+## App do aluno
+
+O aluno usa o app em Flutter: https://github.com/marinalivias/ccam-app
+
+Ele entra com o e-mail e o CPF, vê e ajusta a ficha de treino, marca os treinos feitos e acompanha mural,
+aniversariantes, frequência e mensalidades. Os treinos marcados no app alimentam o CRM do site.

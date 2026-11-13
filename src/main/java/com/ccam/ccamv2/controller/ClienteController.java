@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -39,20 +38,6 @@ public class ClienteController {
     public ResponseEntity<?> cadastrar(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
                                        @RequestBody Cliente cliente) {
         return ResponseEntity.ok(ClienteResponse.de(service.cadastrar(usuario, cliente)));
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credenciais) {
-        try {
-            String email = credenciais.get("email");
-            String cpf = credenciais.get("senha");
-
-            Cliente cliente = service.fazerLogin(email, cpf);
-            return ResponseEntity.ok(ClienteResponse.de(cliente));
-        } catch (RuntimeException e) {
-            String mensagem = e.getMessage() != null ? e.getMessage() : "E-mail ou senha (CPF) incorretos.";
-            return ResponseEntity.badRequest().body(Map.of("erro", mensagem));
-        }
     }
 
     @GetMapping

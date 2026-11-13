@@ -21,8 +21,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             "/api/auth/login",
             "/api/auth/esqueci-senha",
             "/api/auth/redefinir-senha",
-            "/api/contato",
-            "/api/clientes/login"
+            "/api/contato"
     );
 
     private final AuthService authService;
@@ -63,12 +62,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     private boolean ehPublica(HttpServletRequest request) {
-        String caminho = request.getRequestURI();
-        String metodo = request.getMethod();
-        if ("POST".equalsIgnoreCase(metodo) && POST_PUBLICOS.contains(caminho)) {
-            return true;
-        }
-        return "GET".equalsIgnoreCase(metodo) && caminho.startsWith("/api/exercicios/cliente/");
+        return "POST".equalsIgnoreCase(request.getMethod()) && POST_PUBLICOS.contains(request.getRequestURI());
     }
 
     private boolean possuiAlguma(Usuario usuario, Permissao[] permissoes) {

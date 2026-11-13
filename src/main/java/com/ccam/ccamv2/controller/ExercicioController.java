@@ -32,11 +32,6 @@ public class ExercicioController {
         this.logService = logService;
     }
 
-    @GetMapping("/cliente/{clienteId}/dia/{diaSemana}")
-    public ResponseEntity<List<Exercicio>> buscarTreinoDoDia(@PathVariable UUID clienteId, @PathVariable String diaSemana) {
-        return ResponseEntity.ok(repository.findByClienteIdAndDiaSemana(clienteId, diaSemana));
-    }
-
     @GetMapping("/aluno/{clienteId}")
     @RequerPermissao(Permissao.TREINOS_VER)
     public ResponseEntity<List<Exercicio>> buscarFicha(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,

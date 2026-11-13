@@ -24,13 +24,13 @@
         <section class="hero">
           <span class="hero__eyebrow"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-chart"></use></svg>CRM</span>
           <h1>CRM</h1>
-          <p>Acompanhamento de retenção, novos alunos e aniversariantes.</p>
+          <p>Retenção, frequência e aniversariantes, com base nos treinos que os alunos marcam no app.</p>
         </section>
 
         <section class="grid grid--3">
           <article class="card kpi">
             <div class="kpi__top">
-              <h2 class="kpi__title">Visitantes / Total geral</h2>
+              <h2 class="kpi__title">Alunos</h2>
               <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg></span>
             </div>
             <div class="kpi__foot">
@@ -40,12 +40,12 @@
           </article>
           <article class="card kpi">
             <div class="kpi__top">
-              <h2 class="kpi__title">Frequentes</h2>
+              <h2 class="kpi__title">Frequência</h2>
               <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg></span>
             </div>
             <div class="kpi__foot">
               <span class="kpi__value" id="kpi-frequentes">--</span>
-              <span class="kpi__label">presenças/semana</span>
+              <span class="kpi__label">treinaram nos últimos 7 dias</span>
             </div>
           </article>
           <article class="card kpi">
@@ -66,7 +66,7 @@
               <span class="chip-icon chip-icon--warn"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg></span>
               <div>
                 <h2>Alunos ausentes (mais de 15 dias)</h2>
-                <p class="help">Quem não treina há mais de duas semanas.</p>
+                <p class="help">Alunos ativos sem treino marcado no app há mais de 15 dias.</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -75,11 +75,11 @@
                   <tr>
                     <th>Nome</th>
                     <th>Último treino</th>
-                    <th>Status</th>
+                    <th>Sem treinar</th>
                   </tr>
                 </thead>
                 <tbody id="tabela-ausentes">
-                  <tr><td colspan="3" class="empty-cell"><div class="empty"><span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg></span><strong>Indicador em desenvolvimento</strong><span>Os alunos ausentes serão listados aqui.</span></div></td></tr>
+                  <tr><td colspan="3" class="empty-cell"><p class="msg-info">Carregando...</p></td></tr>
                 </tbody>
               </table>
             </div>
@@ -94,7 +94,7 @@
               </div>
             </div>
             <ul class="list" id="lista-aniversariantes">
-              <li class="is-empty"><div class="empty"><span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-cake"></use></svg></span><strong>Indicador em desenvolvimento</strong><span>Os aniversariantes do mês serão listados aqui.</span></div></li>
+              <li class="is-empty"><p class="msg-info">Carregando...</p></li>
             </ul>
           </article>
         </section>
