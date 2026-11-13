@@ -1,0 +1,23 @@
+### 1. Testar o Cadastro de Aluno
+POST http://localhost:8081/api/clientes
+Content-Type: application/json
+
+{
+  "nome": "Gabriel Ferreira",
+  "email": "gabriel@teste.com",
+  "cpf": "52998224725",
+  "telefone": "62999999999",
+  "peso": 80.5
+}
+
+### 2. Testar o Login (Simulando o Flutter)
+POST http://localhost:8081/api/clientes/login
+Content-Type: application/json
+
+{
+  "email": "gabriel@teste.com",
+  "senha": "52998224725"
+}
+
+### 3. Listar todos os alunos (Simulando o CRM)
+GET http://localhost:8081/api/clientes
