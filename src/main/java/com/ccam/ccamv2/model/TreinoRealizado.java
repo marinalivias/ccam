@@ -38,6 +38,12 @@ public class TreinoRealizado {
     @Column(name = "ids_feitos", columnDefinition = "TEXT")
     private String idsFeitos;
 
+    @Column(name = "series_previstas", columnDefinition = "integer default 0")
+    private int seriesPrevistas;
+
+    @Column(name = "series_feitas", columnDefinition = "integer default 0")
+    private int seriesFeitas;
+
     private boolean concluido;
 
     @Column(length = 500)

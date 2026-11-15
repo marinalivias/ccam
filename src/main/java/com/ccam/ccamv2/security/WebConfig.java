@@ -1,6 +1,7 @@
 package com.ccam.ccamv2.security;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -18,5 +19,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor).addPathPatterns("/api/**").excludePathPatterns("/api/app/**");
         registry.addInterceptor(alunoInterceptor).addPathPatterns("/api/app/**");
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/exercicios/**").allowedOrigins("*").allowedMethods("GET", "HEAD");
     }
 }

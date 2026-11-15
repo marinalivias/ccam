@@ -595,8 +595,22 @@
     return { load, setFilter, reset, state };
   };
 
+  const preencherMeses = (select) => {
+    const hoje = new Date();
+    const futuro = Number(select.dataset.futuro ?? 2);
+    const opcoes = ['<option value="" data-default>Todos os meses</option>'];
+    for (let i = futuro; i >= -12; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+      const valor = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const nome = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      opcoes.push(`<option value="${valor}">${esc(nome.charAt(0).toUpperCase() + nome.slice(1))}${i === 0 ? " (este mês)" : ""}</option>`);
+    }
+    select.innerHTML = opcoes.join("");
+  };
+
   const wireFilters = (container, list) => {
     if (!container) return;
+    container.querySelectorAll("select[data-meses]").forEach(preencherMeses);
     const campos = Array.from(container.querySelectorAll("[data-filter]"));
     const aplicar = (el) => list.setFilter(el.dataset.filter, el.value.trim());
     const atrasado = debounce(aplicar, 350);
@@ -606,7 +620,8 @@
     });
     container.querySelector("[data-filter-clear]")?.addEventListener("click", () => {
       campos.forEach((el) => {
-        el.value = el.tagName === "SELECT" ? (el.querySelector("option[data-default]")?.value ?? el.options[0]?.value ?? "") : "";
+        if (el.type === "radio") el.checked = el.hasAttribute("data-default");
+        else el.value = el.tagName === "SELECT" ? (el.querySelector("option[data-default]")?.value ?? el.options[0]?.value ?? "") : "";
       });
       list.reset();
     });
@@ -1348,10 +1363,7 @@
             item.classList.add("selecionado");
             idExercicioSelecionado = item.getAttribute("data-id");
             const exData = catalogoCompleto.find((x) => String(x.id) === String(idExercicioSelecionado));
-            if (exercicioDisplay && exData) {
-              exercicioDisplay.classList.add("is-filled");
-              exercicioDisplay.innerHTML = `<span class="tag">${esc(exData.grupoMuscular)}</span><strong>${esc(exData.nome)}</strong>`;
-            }
+            if (exercicioDisplay && exData) mostrarDemonstracao(exData);
           });
         });
       }
@@ -1367,6 +1379,48 @@
 
     selectAluno.addEventListener("change", () => {
       document.dispatchEvent(new CustomEvent("ccam:aluno-escolhido", { detail: { alunoId: selectAluno.value } }));
+    });
+
+    function mostrarDemonstracao(ex) {
+      exercicioDisplay.classList.add("is-filled");
+      const passos = (ex.instrucoes || "").split("\n").filter(Boolean);
+      exercicioDisplay.innerHTML = `
+        <div class="demo">
+          ${ex.imagemUrl ? `<img class="demo__gif" src="${esc(ex.imagemUrl)}" alt="Demonstração de ${esc(ex.nome)}" loading="lazy" />` : ""}
+          <div class="demo__texto">
+            <span class="tag">${esc(ex.grupoMuscular)}</span>
+            <strong>${esc(ex.nome)}</strong>
+            ${passos.length ? `<ol class="demo__passos">${passos.map((p) => `<li>${esc(p)}</li>`).join("")}</ol>` : '<span class="help">Sem passo a passo cadastrado.</span>'}
+            <button type="button" class="btn btn--sm btn--ghost" data-editar-demo="${esc(ex.id)}">${icon("edit")}Editar demonstração</button>
+          </div>
+        </div>`;
+    }
+
+    exercicioDisplay?.addEventListener("click", async (e) => {
+      const alvo = e.target instanceof Element ? e.target.closest("[data-editar-demo]") : null;
+      if (!alvo) return;
+      const ex = catalogoCompleto.find((x) => String(x.id) === alvo.dataset.editarDemo);
+      if (!ex) return;
+      const salvo = await ui.dialog({
+        title: `Demonstração: ${ex.nome}`,
+        wide: true,
+        html: `
+          <p class="help">O GIF e o passo a passo aparecem para o professor aqui e para o aluno no app.</p>
+          <div class="field"><label for="demo_url">Link do GIF ou imagem</label>
+            <input id="demo_url" name="imagemUrl" type="text" value="${esc(ex.imagemUrl)}" placeholder="https://... ou deixe em branco" /></div>
+          <div class="field"><label for="demo_passos">Como executar (um passo por linha)</label>
+            <textarea id="demo_passos" name="instrucoes" rows="5">${esc(ex.instrucoes)}</textarea></div>`,
+        confirmText: "Salvar demonstração",
+        onConfirm: (form) => api(`/catalogo/${encodeURIComponent(ex.id)}`, {
+          method: "PUT",
+          body: { imagemUrl: form.elements.imagemUrl.value, instrucoes: form.elements.instrucoes.value }
+        })
+      });
+      if (salvo) {
+        Object.assign(ex, salvo);
+        mostrarDemonstracao(ex);
+        ui.toast({ type: "success", title: "Demonstração atualizada", message: ex.nome });
+      }
     });
 
     formTreino.addEventListener("submit", async (e) => {
@@ -1477,6 +1531,7 @@
             <div class="grid grid--3">
               ${exercicios.map((ex) => `
                 <div class="ficha-card" data-id="${esc(ex.id)}">
+                  ${ex.imagemUrl ? `<img class="ficha-card__gif" src="${esc(ex.imagemUrl)}" alt="" loading="lazy" />` : ""}
                   <span class="ficha-card-nome">${esc(ex.nomeExercicio)}</span>
                   <div class="ficha-card-detalhes">
                     <div class="meta">${icon("dumbbell")}<span>${esc(ex.grupoMuscular || "Geral")}</span></div>
@@ -1777,20 +1832,26 @@
       }
     };
 
+    const diasEntre = (a, b) => Math.round((new Date(`${b}T00:00:00`) - new Date(`${a}T00:00:00`)) / 86400000);
     const linha = (l) => {
       const pago = l.status === "Pago";
       const vencido = !pago && l.vencimento < todayIso();
-      const badge = `<span class="badge ${pago ? "badge--ok" : vencido ? "badge--danger" : "badge--warn"}">${esc(l.status)}</span>`;
+      const atraso = vencido ? diasEntre(l.vencimento, todayIso()) : 0;
+      const situacao = pago
+        ? `<span class="badge badge--ok">Pago</span>${l.dataPagamento ? `<span class="cell-sub">em ${esc(formatDate(l.dataPagamento))}</span>` : ""}`
+        : vencido
+          ? `<span class="badge badge--danger">Vencida</span><span class="cell-sub">há ${atraso} ${atraso === 1 ? "dia" : "dias"}</span>`
+          : '<span class="badge badge--warn">A receber</span>';
       const acoes = [
-        !pago && podeLancar ? `<button type="button" class="btn btn--sm btn--success" data-fin="pagar" data-id="${esc(l.id)}" title="Marcar como pago">${icon("check")}Pago</button>` : "",
+        !pago && podeLancar ? `<button type="button" class="btn btn--sm btn--pagar" data-fin="pagar" data-id="${esc(l.id)}">${icon("wallet")}<span class="btn__label">Registrar pagamento</span></button>` : "",
         podeEditar ? `<button type="button" class="btn btn--sm btn--icon-sm" data-fin="editar" data-id="${esc(l.id)}" title="Editar lançamento" aria-label="Editar lançamento">${icon("edit")}</button>` : "",
         podeEditar ? `<button type="button" class="btn btn--sm btn--icon-sm btn--danger" data-fin="excluir" data-id="${esc(l.id)}" title="Excluir lançamento" aria-label="Excluir lançamento">${icon("trash")}</button>` : ""
       ].join("");
       return `<tr>
         <td class="col-name"><strong>${esc(l.alunoNome)}</strong>${l.alunoAtivo ? "" : '<span class="cell-sub">Aluno inativo</span>'}</td>
         <td class="num">${esc(formatMoney(l.valor))}</td>
-        <td>${esc(formatDate(l.vencimento))}${vencido ? '<span class="cell-sub">Vencida</span>' : ""}</td>
-        <td>${badge}</td>
+        <td>${esc(formatDate(l.vencimento))}</td>
+        <td>${situacao}</td>
         <td class="num"><div class="row-actions">${acoes || '<span class="muted">--</span>'}</div></td>
       </tr>`;
     };
@@ -1860,6 +1921,13 @@
 
       try {
         if (alvo.dataset.fin === "pagar") {
+          const ok = await ui.confirm({
+            type: "info",
+            title: "Registrar pagamento?",
+            message: `${l.alunoNome}: ${formatMoney(l.valor)} com vencimento em ${formatDate(l.vencimento)}. O pagamento fica registrado com a data de hoje.`,
+            confirmText: "Registrar pagamento"
+          });
+          if (!ok) return;
           await api(`/financeiro/${id}/pagar`, { method: "PATCH" });
           ui.toast({ type: "success", title: "Pagamento registrado", message: `${l.alunoNome}: ${formatMoney(l.valor)}` });
           lista.load();

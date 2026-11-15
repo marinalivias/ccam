@@ -37,12 +37,14 @@ public class AppAlunoController {
     private final ProdutoRepository produtos;
     private final LojaService lojaService;
     private final ParabensRepository parabens;
+    private final TreinoRealizadoService treinoRealizado;
 
     public AppAlunoController(AlunoAuthService authService, ExercicioRepository exercicios,
                               CatalogoExercicioRepository catalogo, TreinoRealizadoRepository realizados,
                               MuralRepository mural, FinanceiroRepository financeiro, ClienteRepository clientes,
                               FrequenciaService frequencia, LogService logService,
-                              ProdutoRepository produtos, LojaService lojaService, ParabensRepository parabens) {
+                              ProdutoRepository produtos, LojaService lojaService, ParabensRepository parabens,
+                              TreinoRealizadoService treinoRealizado) {
         this.authService = authService;
         this.exercicios = exercicios;
         this.catalogo = catalogo;
@@ -55,6 +57,7 @@ public class AppAlunoController {
         this.produtos = produtos;
         this.lojaService = lojaService;
         this.parabens = parabens;
+        this.treinoRealizado = treinoRealizado;
     }
 
     @PostMapping("/login")
@@ -87,21 +90,41 @@ public class AppAlunoController {
     @Transactional
     public Exercicio adicionar(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
                                @RequestBody AlunoExercicioRequest req) {
-        if (req.catalogoId() == null) {
-            throw new NegocioException("Escolha um exercício.");
-        }
-        CatalogoExercicio item = catalogo.findById(req.catalogoId())
-                .orElseThrow(() -> new NegocioException("Exercício não encontrado."));
         Exercicio ex = new Exercicio();
         ex.setClienteId(aluno.getId());
-        ex.setNomeExercicio(item.getNome());
-        ex.setGrupoMuscular(item.getGrupoMuscular());
-        ex.setImagemUrl(item.getImagemUrl());
+        if (req.catalogoId() != null) {
+            CatalogoExercicio item = catalogo.findById(req.catalogoId())
+                    .orElseThrow(() -> new NegocioException("Exercício não encontrado."));
+            ex.setNomeExercicio(item.getNome());
+            ex.setGrupoMuscular(item.getGrupoMuscular());
+            ex.setImagemUrl(item.getImagemUrl());
+        } else {
+            String nome = limpo(req.nome());
+            if (nome == null) {
+                throw new NegocioException("Escolha um exercício do catálogo ou digite o nome.");
+            }
+            ex.setNomeExercicio(nome.length() > 120 ? nome.substring(0, 120) : nome);
+            String grupo = limpo(req.grupoMuscular());
+            ex.setGrupoMuscular(grupo == null ? "Outros" : (grupo.length() > 60 ? grupo.substring(0, 60) : grupo));
+        }
         aplicar(ex, req);
         Exercicio salvo = exercicios.save(ex);
         logService.registrarPeloAluno(aluno, LogService.TREINO, salvo.getId(), LogService.CRIACAO,
                 "Exercício adicionado pelo aluno: " + resumo(salvo));
         return salvo;
+    }
+
+    @DeleteMapping("/treino")
+    @Transactional
+    public ResponseEntity<Void> limparFicha(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        List<Exercicio> ficha = exercicios.findByClienteId(aluno.getId());
+        if (!ficha.isEmpty()) {
+            exercicios.deleteAll(ficha);
+            logService.registrarPeloAluno(aluno, LogService.TREINO, null, LogService.EXCLUSAO,
+                    "Aluno apagou a ficha inteira para montar a própria (" + ficha.size() + " exercícios): "
+                            + ficha.stream().map(Exercicio::getNomeExercicio).collect(Collectors.joining(", ")));
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/treino/{id}")
@@ -140,50 +163,23 @@ public class AppAlunoController {
         if (ate.isBefore(de) || ChronoUnit.DAYS.between(de, ate) > 62) {
             throw new NegocioException("Período inválido.");
         }
-        return realizados.findByClienteIdAndDataBetweenOrderByDataAsc(aluno.getId(), de, ate)
-                .stream().map(TreinoRealizadoResponse::de).toList();
+        return treinoRealizado.listar(aluno, de, ate);
     }
 
     @PutMapping("/treinos-realizados/{data}")
-    @Transactional
     public ResponseEntity<TreinoRealizadoResponse> marcar(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
                                                           @PathVariable LocalDate data,
                                                           @RequestBody TreinoRealizadoRequest req) {
-        LocalDate hoje = LocalDate.now();
-        if (data.isAfter(hoje)) {
-            throw new NegocioException("Não dá para marcar um treino no futuro.");
-        }
-        if (data.isBefore(hoje.minusDays(30))) {
-            throw new NegocioException("Só dá para marcar treinos dos últimos 30 dias.");
-        }
+        return treinoRealizado.marcarCompletos(aluno, data, req.idsFeitos(), req.observacao())
+                .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
 
-        String dia = DiasSemana.de(data);
-        List<Exercicio> previstos = exercicios.findByClienteId(aluno.getId()).stream()
-                .filter(e -> dia.equals(e.getDiaSemana()) || DiasSemana.ROTATIVO.equals(e.getDiaSemana()))
-                .toList();
-        Set<UUID> validos = previstos.stream().map(Exercicio::getId).collect(Collectors.toSet());
-        List<UUID> feitos = req.idsFeitos() == null ? List.of()
-                : req.idsFeitos().stream().filter(validos::contains).distinct().toList();
-
-        Optional<TreinoRealizado> existente = realizados.findByClienteIdAndData(aluno.getId(), data);
-        if (feitos.isEmpty()) {
-            existente.ifPresent(realizados::delete);
-            return ResponseEntity.noContent().build();
-        }
-
-        TreinoRealizado t = existente.orElseGet(TreinoRealizado::new);
-        t.setEmpresaId(aluno.getEmpresaId());
-        t.setClienteId(aluno.getId());
-        t.setData(data);
-        t.setDiaSemana(dia);
-        t.setExerciciosPrevistos(previstos.size());
-        t.setExerciciosFeitos(feitos.size());
-        t.setIdsFeitos(feitos.stream().map(UUID::toString).collect(Collectors.joining(",")));
-        t.setConcluido(feitos.size() >= previstos.size());
-        String obs = limpo(req.observacao());
-        t.setObservacao(obs != null && obs.length() > 500 ? obs.substring(0, 500) : obs);
-        t.setAtualizadoEm(LocalDateTime.now());
-        return ResponseEntity.ok(TreinoRealizadoResponse.de(realizados.save(t)));
+    @PutMapping("/treinos-realizados/{data}/exercicios/{exercicioId}")
+    public ResponseEntity<TreinoRealizadoResponse> registrar(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
+                                                             @PathVariable LocalDate data, @PathVariable UUID exercicioId,
+                                                             @RequestBody RegistroRequest req) {
+        return treinoRealizado.registrar(aluno, data, exercicioId, req.reps(), req.carga())
+                .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/frequencia")

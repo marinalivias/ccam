@@ -27,4 +27,7 @@ public class Financeiro {
 
     @Column(nullable = false)
     private String status;
+
+    @Column(name = "data_pagamento")
+    private LocalDate dataPagamento;
 }

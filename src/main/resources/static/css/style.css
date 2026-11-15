@@ -2950,3 +2950,126 @@ tr.is-inactive td strong {
 #produtos-card .card__head {
   flex-wrap: wrap;
 }
+
+/* Filtros com rotulo e seletor de situacao */
+.toolbar--labels {
+  align-items: flex-end;
+}
+
+.toolbar--labels .field > label:not(.sr-only) {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.segmented {
+  display: inline-flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(7, 11, 20, .45);
+}
+
+.segmented__item {
+  position: relative;
+  flex: 1 1 auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.segmented__item input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented__item span {
+  display: block;
+  padding: 8px 14px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+
+.segmented__item:hover span {
+  color: var(--text);
+}
+
+.segmented__item input:checked + span {
+  background: rgba(124, 58, 237, .32);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .5);
+}
+
+.segmented__item input:focus-visible + span {
+  outline: 2px solid var(--brand-hi);
+  outline-offset: 2px;
+}
+
+.btn--pagar {
+  border-color: rgba(34, 197, 94, .45);
+  color: #86efac;
+}
+
+.btn--pagar:hover {
+  background: rgba(34, 197, 94, .14);
+}
+
+/* Demonstracao do exercicio */
+.demo {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  width: 100%;
+  text-align: left;
+}
+
+.demo__gif {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.demo__texto {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.demo__passos {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.ficha-card__gif {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .demo {
+    grid-template-columns: 1fr;
+  }
+}

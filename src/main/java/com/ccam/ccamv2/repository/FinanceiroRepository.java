@@ -20,6 +20,7 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, UUID> {
             select f from Financeiro f
             where f.empresaId = :empresaId
               and (:status = '' or f.status = :status)
+              and (:soVencidas = false or f.vencimento < :hoje)
               and f.vencimento between :inicio and :fim
               and (:like = '' or f.clienteId in (
                     select c.id from Cliente c
@@ -27,6 +28,8 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, UUID> {
             """)
     Page<Financeiro> buscar(@Param("empresaId") UUID empresaId,
                             @Param("status") String status,
+                            @Param("soVencidas") boolean soVencidas,
+                            @Param("hoje") LocalDate hoje,
                             @Param("inicio") LocalDate inicio,
                             @Param("fim") LocalDate fim,
                             @Param("like") String like,

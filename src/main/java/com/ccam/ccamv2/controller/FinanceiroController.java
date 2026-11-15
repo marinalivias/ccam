@@ -60,12 +60,13 @@ public class FinanceiroController {
             @RequestParam(required = false) String mes,
             @RequestParam(required = false) Integer pagina,
             @RequestParam(required = false) Integer tamanho) {
-        String s = status != null && STATUS.contains(status) ? status : "";
+        boolean vencidas = "Vencido".equals(status);
+        String s = vencidas ? "Pendente" : (status != null && STATUS.contains(status) ? status : "");
         YearMonth m = Paginacao.mes(mes);
         LocalDate inicio = m != null ? m.atDay(1) : Paginacao.DATA_MINIMA;
         LocalDate fim = m != null ? m.atEndOfMonth() : Paginacao.DATA_MAXIMA;
 
-        Page<Financeiro> page = repository.buscar(usuario.getEmpresaId(), s, inicio, fim,
+        Page<Financeiro> page = repository.buscar(usuario.getEmpresaId(), s, vencidas, LocalDate.now(), inicio, fim,
                 Paginacao.like(Paginacao.termo(busca)),
                 Paginacao.criar(pagina, tamanho, Sort.by(Sort.Direction.DESC, "vencimento").and(Sort.by("id"))));
         return ResponseEntity.ok(PaginaResposta.de(page, comNomes(page.getContent())));
@@ -106,6 +107,7 @@ public class FinanceiroController {
         Financeiro f = daEmpresa(usuario, id);
         if (!"Pago".equals(f.getStatus())) {
             f.setStatus("Pago");
+            f.setDataPagamento(LocalDate.now());
             f = repository.save(f);
             logService.registrar(usuario, LogService.FINANCEIRO, f.getId(), f.getClienteId(), LogService.EDICAO,
                     "Pagamento registrado: " + resumo(f));
@@ -133,6 +135,15 @@ public class FinanceiroController {
             atual.setValor(dados.getValor());
             atual.setVencimento(dados.getVencimento());
             atual.setStatus(dados.getStatus());
+            if ("Pago".equals(dados.getStatus())) {
+                if (dados.getDataPagamento() != null) {
+                    atual.setDataPagamento(dados.getDataPagamento());
+                } else if (atual.getDataPagamento() == null) {
+                    atual.setDataPagamento(LocalDate.now());
+                }
+            } else {
+                atual.setDataPagamento(null);
+            }
             atual = repository.save(atual);
             logService.registrar(usuario, LogService.FINANCEIRO, atual.getId(), atual.getClienteId(), LogService.EDICAO,
                     "Mensalidade alterada\n" + dif);

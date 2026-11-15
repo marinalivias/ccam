@@ -37,27 +37,25 @@
               </div>
             </div>
 
-            <div class="toolbar" id="financeiro-filtros">
+            <div class="toolbar toolbar--labels" id="financeiro-filtros">
               <div class="field toolbar__search">
-                <label for="fin-busca" class="sr-only">Buscar por aluno</label>
+                <label for="fin-busca">Aluno</label>
                 <div class="input-wrap">
                   <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
-                  <input id="fin-busca" type="search" data-filter="busca" placeholder="Buscar por aluno" autocomplete="off" />
+                  <input id="fin-busca" type="search" data-filter="busca" placeholder="Buscar pelo nome" autocomplete="off" />
                 </div>
               </div>
               <div class="field">
-                <label for="fin-status" class="sr-only">Status</label>
-                <select id="fin-status" data-filter="status">
-                  <option value="" data-default>Todos os status</option>
-                  <option value="Pendente">Pendentes</option>
-                  <option value="Pago">Pagos</option>
-                </select>
+                <label for="fin-mes">Mês de vencimento</label>
+                <select id="fin-mes" data-filter="mes" data-meses></select>
               </div>
-              <div class="field">
-                <label for="fin-mes" class="sr-only">Mês de vencimento</label>
-                <input id="fin-mes" type="month" data-filter="mes" title="Mês de vencimento" />
+              <button type="button" class="btn btn--ghost" data-filter-clear>Limpar filtros</button>
+              <div class="segmented" role="radiogroup" aria-label="Situação">
+                <label class="segmented__item"><input type="radio" name="fin-status" value="" data-filter="status" data-default checked /><span>Todas</span></label>
+                <label class="segmented__item"><input type="radio" name="fin-status" value="Pendente" data-filter="status" /><span>A receber</span></label>
+                <label class="segmented__item"><input type="radio" name="fin-status" value="Vencido" data-filter="status" /><span>Vencidas</span></label>
+                <label class="segmented__item"><input type="radio" name="fin-status" value="Pago" data-filter="status" /><span>Pagas</span></label>
               </div>
-              <button type="button" class="btn btn--ghost" data-filter-clear>Limpar</button>
             </div>
 
             <div class="table-wrap">
@@ -67,7 +65,7 @@
                     <th class="col-name">Aluno</th>
                     <th class="num">Valor</th>
                     <th>Vencimento</th>
-                    <th>Status</th>
+                    <th>Situação</th>
                     <th class="num">Ações</th>
                   </tr>
                 </thead>

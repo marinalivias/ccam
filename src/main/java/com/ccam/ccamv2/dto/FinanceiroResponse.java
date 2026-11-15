@@ -13,11 +13,12 @@ public record FinanceiroResponse(
         boolean alunoAtivo,
         LocalDate vencimento,
         Double valor,
-        String status) {
+        String status,
+        LocalDate dataPagamento) {
     public static FinanceiroResponse de(Financeiro f, Cliente aluno) {
         return new FinanceiroResponse(f.getId(), f.getClienteId(),
                 aluno != null ? aluno.getNome() : "Aluno não encontrado",
                 aluno != null && aluno.isAtivo(),
-                f.getVencimento(), f.getValor(), f.getStatus());
+                f.getVencimento(), f.getValor(), f.getStatus(), f.getDataPagamento());
     }
 }

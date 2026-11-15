@@ -52,7 +52,7 @@ public class FrequenciaService {
         List<TreinoRealizado> lista = realizados.findByClienteIdAndDataBetweenOrderByDataAsc(
                 aluno.getId(), hoje.minusDays(400), hoje);
         Set<LocalDate> dias = lista.stream()
-                .filter(t -> t.getExerciciosFeitos() > 0)
+                .filter(t -> t.getExerciciosFeitos() > 0 || t.getSeriesFeitas() > 0)
                 .map(TreinoRealizado::getData)
                 .collect(Collectors.toSet());
 
