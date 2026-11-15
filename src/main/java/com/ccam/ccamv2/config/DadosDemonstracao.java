@@ -22,9 +22,7 @@ import java.util.UUID;
 @Order(2)
 public class DadosDemonstracao implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DadosDemonstracao.class);
-    private static final String ALUNO = "aluno@ccam.com";
-    private static final String COLEGA = "colega@ccam.com";
-    private static final String CPF_COLEGA = "39053344705";
+    private static final String ALUNO = DadosIniciais.ALUNO_EMAIL;
 
     private final boolean ativo;
     private final String gestorEmail;
@@ -34,14 +32,14 @@ public class DadosDemonstracao implements CommandLineRunner {
     private final MuralRepository mural;
     private final FinanceiroRepository financeiro;
     private final TreinoRealizadoRepository realizados;
-    private final ParabensRepository parabens;
     private final TreinoRealizadoService treinoRealizado;
+    private final ConfigPixRepository configPix;
 
     public DadosDemonstracao(@Value("${ccam.demo:true}") boolean ativo,
                              @Value("${ccam.seed.gestor-email}") String gestorEmail,
                              UsuarioRepository usuarios, ClienteRepository clientes, ExercicioRepository exercicios,
                              MuralRepository mural, FinanceiroRepository financeiro, TreinoRealizadoRepository realizados,
-                             ParabensRepository parabens, TreinoRealizadoService treinoRealizado) {
+                             TreinoRealizadoService treinoRealizado, ConfigPixRepository configPix) {
         this.ativo = ativo;
         this.gestorEmail = gestorEmail;
         this.usuarios = usuarios;
@@ -50,8 +48,8 @@ public class DadosDemonstracao implements CommandLineRunner {
         this.mural = mural;
         this.financeiro = financeiro;
         this.realizados = realizados;
-        this.parabens = parabens;
         this.treinoRealizado = treinoRealizado;
+        this.configPix = configPix;
     }
 
     @Override
@@ -76,7 +74,6 @@ public class DadosDemonstracao implements CommandLineRunner {
         if (aluno == null) {
             return;
         }
-        Cliente colega = colega(empresaId);
         LocalDate hoje = LocalDate.now();
 
         if (aluno.getDataCadastro() == null || aluno.getDataCadastro().toLocalDate().isAfter(hoje.minusDays(60))) {
@@ -84,36 +81,11 @@ public class DadosDemonstracao implements CommandLineRunner {
             aluno = clientes.save(aluno);
         }
         aniversarioHoje(aluno, hoje);
-        if (colega != null) {
-            aniversarioHoje(colega, hoje);
-        }
         avisos(empresaId, gestor.get().getNome());
         mensalidades(empresaId, aluno, hoje);
         treinos(aluno, hoje);
-        if (colega != null) {
-            parabensDoColega(empresaId, colega, aluno, hoje);
-        }
-        log.info("Dados de demonstração prontos: {} e {} fazem aniversário hoje", ALUNO, COLEGA);
-    }
-
-    private Cliente colega(UUID empresaId) {
-        Optional<Cliente> existente = clientes.findByEmailIgnoreCase(COLEGA);
-        if (existente.isPresent()) {
-            return empresaId.equals(existente.get().getEmpresaId()) ? existente.get() : null;
-        }
-        if (clientes.findByCpf(CPF_COLEGA).isPresent()) {
-            return null;
-        }
-        Cliente c = new Cliente();
-        c.setEmpresaId(empresaId);
-        c.setNome("Colega Exemplo");
-        c.setEmail(COLEGA);
-        c.setCpf(CPF_COLEGA);
-        c.setTelefone("(62) 98888-0000");
-        c.setSexo("F");
-        c.setDataNascimento(LocalDate.of(1998, 1, 1));
-        c.setDataCadastro(LocalDateTime.now().minusDays(40));
-        return clientes.save(c);
+        pixDeExemplo(empresaId);
+        log.info("Dados de demonstração prontos: {} faz aniversário hoje", ALUNO);
     }
 
     private void aniversarioHoje(Cliente c, LocalDate hoje) {
@@ -198,18 +170,46 @@ public class DadosDemonstracao implements CommandLineRunner {
                 parcialFeito = true;
                 continue;
             }
-            treinoRealizado.marcarCompletos(aluno, d, doDia.stream().map(Exercicio::getId).toList(), null);
+            int semanasAtras = (int) java.time.temporal.ChronoUnit.DAYS.between(d, hoje) / 7;
+            for (Exercicio ex : doDia) {
+                Integer alvo = TreinoRealizadoService.alvoReps(ex);
+                int meta = alvo == null ? 1 : alvo;
+                List<Integer> reps = new java.util.ArrayList<>();
+                for (int i = 0; i < TreinoRealizadoService.series(ex); i++) {
+                    reps.add(meta);
+                }
+                treinoRealizado.registrar(aluno, d, ex.getId(), reps, cargaDaSemana(ex.getCarga(), semanasAtras));
+            }
         }
     }
 
-    private void parabensDoColega(UUID empresaId, Cliente colega, Cliente aluno, LocalDate hoje) {
-        parabens.apagarDe(colega.getId(), aluno.getId());
-        Parabens p = new Parabens();
-        p.setEmpresaId(empresaId);
-        p.setRemetenteId(colega.getId());
-        p.setDestinatarioId(aluno.getId());
-        p.setAno(hoje.getYear());
-        p.setCriadoEm(LocalDateTime.now().minusHours(1));
-        parabens.save(p);
+    private static String cargaDaSemana(String carga, int semanasAtras) {
+        if (carga == null) {
+            return null;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\d+").matcher(carga);
+        if (!m.find()) {
+            return carga;
+        }
+        int base = Integer.parseInt(m.group());
+        int valor = Math.max(1, (int) Math.round(base * (1 - 0.08 * semanasAtras)));
+        return valor + "kg";
+    }
+
+    private void pixDeExemplo(UUID empresaId) {
+        if (configPix.existsById(empresaId)) {
+            configPix.findById(empresaId).filter(c -> c.getDiaDisponivel() == null).ifPresent(c -> {
+                c.setDiaDisponivel(1);
+                configPix.save(c);
+            });
+            return;
+        }
+        ConfigPix c = new ConfigPix();
+        c.setDiaDisponivel(1);
+        c.setEmpresaId(empresaId);
+        c.setChave("pix@formulafitness.com.br");
+        c.setNomeRecebedor("Formula Fitness Academia");
+        c.setCidade("Goiânia");
+        configPix.save(c);
     }
 }

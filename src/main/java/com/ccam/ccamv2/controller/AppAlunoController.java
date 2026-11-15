@@ -36,15 +36,17 @@ public class AppAlunoController {
     private final LogService logService;
     private final ProdutoRepository produtos;
     private final LojaService lojaService;
-    private final ParabensRepository parabens;
     private final TreinoRealizadoService treinoRealizado;
+    private final PixService pixService;
+    private final com.ccam.ccamv2.service.NotificacaoService notificacoes;
 
     public AppAlunoController(AlunoAuthService authService, ExercicioRepository exercicios,
                               CatalogoExercicioRepository catalogo, TreinoRealizadoRepository realizados,
                               MuralRepository mural, FinanceiroRepository financeiro, ClienteRepository clientes,
                               FrequenciaService frequencia, LogService logService,
-                              ProdutoRepository produtos, LojaService lojaService, ParabensRepository parabens,
-                              TreinoRealizadoService treinoRealizado) {
+                              ProdutoRepository produtos, LojaService lojaService,
+                              TreinoRealizadoService treinoRealizado, PixService pixService,
+                              com.ccam.ccamv2.service.NotificacaoService notificacoes) {
         this.authService = authService;
         this.exercicios = exercicios;
         this.catalogo = catalogo;
@@ -56,8 +58,9 @@ public class AppAlunoController {
         this.logService = logService;
         this.produtos = produtos;
         this.lojaService = lojaService;
-        this.parabens = parabens;
         this.treinoRealizado = treinoRealizado;
+        this.pixService = pixService;
+        this.notificacoes = notificacoes;
     }
 
     @PostMapping("/login")
@@ -69,6 +72,18 @@ public class AppAlunoController {
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         authService.logout(AuthInterceptor.extrairToken(request));
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/senha")
+    public ResponseEntity<Void> trocarSenha(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
+                                            @RequestBody Map<String, String> corpo) {
+        authService.trocarSenha(aluno, corpo.get("atual"), corpo.get("nova"));
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/notificacoes")
+    public List<com.ccam.ccamv2.dto.NotificacaoApp> notificacoes(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        return notificacoes.doAluno(aluno);
     }
 
     @GetMapping("/me")
@@ -197,67 +212,6 @@ public class AppAlunoController {
         return PaginaResposta.de(page);
     }
 
-    @GetMapping("/aniversariantes")
-    public List<AniversarianteResponse> aniversariantes(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
-                                                        @RequestParam(required = false) String mes) {
-        YearMonth m = Paginacao.mes(mes);
-        int numeroMes = (m != null ? m : YearMonth.now()).getMonthValue();
-        LocalDate hoje = LocalDate.now();
-        Set<UUID> jaEnviados = parabens.findByRemetenteIdAndAno(aluno.getId(), hoje.getYear()).stream()
-                .map(Parabens::getDestinatarioId).collect(Collectors.toSet());
-        return clientes.findByEmpresaIdAndAtivoTrueOrderByNomeAsc(aluno.getEmpresaId()).stream()
-                .filter(c -> c.getDataNascimento() != null && c.getDataNascimento().getMonthValue() == numeroMes)
-                .sorted(Comparator.comparingInt((Cliente c) -> c.getDataNascimento().getDayOfMonth()).thenComparing(Cliente::getNome))
-                .map(c -> new AniversarianteResponse(c.getId(), nomeCurto(c.getNome()), c.getDataNascimento().getDayOfMonth(), numeroMes,
-                        aniversarioHoje(c, hoje), c.getId().equals(aluno.getId()), jaEnviados.contains(c.getId())))
-                .toList();
-    }
-
-    @PostMapping("/parabens/{destinatarioId}")
-    @Transactional
-    public ResponseEntity<Map<String, String>> mandarParabens(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno,
-                                                              @PathVariable UUID destinatarioId) {
-        LocalDate hoje = LocalDate.now();
-        Cliente destino = clientes.findById(destinatarioId)
-                .filter(c -> c.isAtivo() && Objects.equals(c.getEmpresaId(), aluno.getEmpresaId()))
-                .orElseThrow(() -> new NegocioException("Aluno não encontrado."));
-        if (destino.getId().equals(aluno.getId())) {
-            throw new NegocioException("Você não pode mandar parabéns para você mesmo.");
-        }
-        if (!aniversarioHoje(destino, hoje)) {
-            throw new NegocioException("Só dá para mandar parabéns no dia do aniversário.");
-        }
-        if (parabens.existsByRemetenteIdAndDestinatarioIdAndAno(aluno.getId(), destino.getId(), hoje.getYear())) {
-            throw new NegocioException("Você já mandou parabéns para " + nomeCurto(destino.getNome()) + " este ano.");
-        }
-        Parabens p = new Parabens();
-        p.setEmpresaId(aluno.getEmpresaId());
-        p.setRemetenteId(aluno.getId());
-        p.setDestinatarioId(destino.getId());
-        p.setAno(hoje.getYear());
-        parabens.save(p);
-        return ResponseEntity.ok(Map.of("mensagem", "Parabéns enviado para " + nomeCurto(destino.getNome()) + "!"));
-    }
-
-    @GetMapping("/notificacoes")
-    public Map<String, Object> notificacoes(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
-        List<Parabens> lista = parabens.findTop50ByDestinatarioIdAndCriadoEmAfterOrderByCriadoEmDesc(
-                aluno.getId(), LocalDateTime.now().minusDays(60));
-        Map<UUID, String> nomes = clientes.findAllById(lista.stream().map(Parabens::getRemetenteId).collect(Collectors.toSet()))
-                .stream().collect(Collectors.toMap(Cliente::getId, c -> nomeCurto(c.getNome())));
-        List<NotificacaoResponse> itens = lista.stream()
-                .map(p -> new NotificacaoResponse(p.getId(), nomes.getOrDefault(p.getRemetenteId(), "Um colega"), p.getCriadoEm(), p.isLido()))
-                .toList();
-        return Map.of("naoLidas", parabens.countByDestinatarioIdAndLidoFalse(aluno.getId()), "itens", itens);
-    }
-
-    @PostMapping("/notificacoes/lidas")
-    @Transactional
-    public ResponseEntity<Void> marcarLidas(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
-        parabens.marcarLidos(aluno.getId());
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/loja")
     public LojaAppResponse loja(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
         ConfigLoja config = lojaService.config(aluno.getEmpresaId());
@@ -278,6 +232,54 @@ public class AppAlunoController {
     public List<FinanceiroResponse> financeiro(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
         return financeiro.findByClienteIdOrderByVencimentoDesc(aluno.getId()).stream()
                 .map(f -> FinanceiroResponse.de(f, aluno)).toList();
+    }
+
+    @GetMapping("/financeiro/config")
+    public Map<String, Object> configFinanceiro(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        var config = pixService.registro(aluno.getEmpresaId()).orElse(null);
+        Map<String, Object> r = new java.util.HashMap<>();
+        r.put("pixAtivo", config != null && config.getChave() != null && !config.getChave().isBlank());
+        r.put("diaPixDisponivel", config == null ? null : config.getDiaDisponivel());
+        return r;
+    }
+
+    @GetMapping("/financeiro/{id}/pix")
+    public Map<String, Object> pixDaMensalidade(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno, @PathVariable UUID id) {
+        Financeiro f = mensalidadeDoAluno(aluno, id);
+        if ("Pago".equals(f.getStatus())) {
+            throw new NegocioException("Esta mensalidade já está paga.");
+        }
+        ConfigPix config = pixService.config(aluno.getEmpresaId())
+                .orElseThrow(() -> new NegocioException("A academia ainda não cadastrou a chave Pix. Pague na recepção."));
+        String txid = "CCAM" + f.getId().toString().replace("-", "").substring(0, 12);
+        return Map.of(
+                "copiaECola", pixService.copiaECola(config, f.getValor(), txid),
+                "valor", f.getValor(),
+                "recebedor", config.getNomeRecebedor(),
+                "chave", config.getChave());
+    }
+
+    @PostMapping("/financeiro/{id}/informar-pagamento")
+    @Transactional
+    public FinanceiroResponse informarPagamento(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno, @PathVariable UUID id) {
+        Financeiro f = mensalidadeDoAluno(aluno, id);
+        if ("Pago".equals(f.getStatus())) {
+            throw new NegocioException("Esta mensalidade já está paga.");
+        }
+        if (f.getPagamentoInformadoEm() == null) {
+            f.setPagamentoInformadoEm(LocalDateTime.now());
+            f = financeiro.save(f);
+            logService.registrarPeloAluno(aluno, LogService.FINANCEIRO, f.getId(), LogService.EDICAO,
+                    String.format(java.util.Locale.forLanguageTag("pt-BR"), "Aluno informou pagamento por Pix de R$ %,.2f (vencimento %s). Aguardando confirmação.",
+                            f.getValor(), f.getVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+        }
+        return FinanceiroResponse.de(f, aluno);
+    }
+
+    private Financeiro mensalidadeDoAluno(Cliente aluno, UUID id) {
+        return financeiro.findById(id)
+                .filter(f -> aluno.getId().equals(f.getClienteId()))
+                .orElseThrow(() -> new NegocioException("Mensalidade não encontrada."));
     }
 
     private static boolean aniversarioHoje(Cliente c, LocalDate hoje) {

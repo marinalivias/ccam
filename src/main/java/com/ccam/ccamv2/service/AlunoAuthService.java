@@ -35,11 +35,10 @@ public class AlunoAuthService {
     }
 
     @Transactional
-    public AlunoLoginResponse login(String email, String cpf) {
-        String cpfDigitado = cpf == null ? "" : cpf.replaceAll("[^0-9]", "");
+    public AlunoLoginResponse login(String email, String senha) {
         Cliente aluno = clientes.findByEmailIgnoreCase(email == null ? "" : email.trim())
-                .filter(c -> c.getCpf() != null && c.getCpf().replaceAll("[^0-9]", "").equals(cpfDigitado))
-                .orElseThrow(() -> new NegocioException("E-mail ou senha (CPF) incorretos."));
+                .filter(c -> senhaConfere(c, senha))
+                .orElseThrow(() -> new NegocioException("E-mail ou senha incorretos."));
         if (!aluno.isAtivo()) {
             throw new NegocioException("Seu cadastro está inativo. Procure a recepção da academia.");
         }
@@ -55,6 +54,29 @@ public class AlunoAuthService {
         sessao.setExpiraEm(LocalDateTime.now().plusDays(sessaoDias));
         sessoes.save(sessao);
         return new AlunoLoginResponse(token, sessao.getExpiraEm(), perfil(aluno));
+    }
+
+    @Transactional
+    public void trocarSenha(Cliente aluno, String atual, String nova) {
+        if (!senhaConfere(aluno, atual)) {
+            throw new NegocioException("A senha atual não confere.");
+        }
+        if (nova == null || nova.length() < 6) {
+            throw new NegocioException("A nova senha precisa ter pelo menos 6 caracteres.");
+        }
+        aluno.setSenhaHash(SenhaUtil.hash(nova));
+        clientes.save(aluno);
+    }
+
+    private static boolean senhaConfere(Cliente c, String senha) {
+        if (senha == null || senha.isEmpty()) {
+            return false;
+        }
+        if (c.getSenhaHash() != null) {
+            return SenhaUtil.confere(senha, c.getSenhaHash());
+        }
+        String digitos = senha.replaceAll("[^0-9]", "");
+        return c.getCpf() != null && !digitos.isEmpty() && c.getCpf().replaceAll("[^0-9]", "").equals(digitos);
     }
 
     public Optional<Cliente> autenticar(String token) {

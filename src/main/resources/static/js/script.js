@@ -1465,7 +1465,7 @@
     });
   };
 
-  // Treinos
+  // Edicao de exercicio
   const exercicioFormHtml = (ex) => `
     <p class="help"><strong>${esc(ex.nomeExercicio)}</strong>${ex.grupoMuscular ? ` (${esc(ex.grupoMuscular)})` : ""}</p>
     <div class="fgrid">
@@ -1838,13 +1838,18 @@
       const pago = l.status === "Pago";
       const vencido = !pago && l.vencimento < todayIso();
       const atraso = vencido ? diasEntre(l.vencimento, todayIso()) : 0;
+      const informado = !pago && !!l.pagamentoInformadoEm;
       const situacao = pago
         ? `<span class="badge badge--ok">Pago</span>${l.dataPagamento ? `<span class="cell-sub">em ${esc(formatDate(l.dataPagamento))}</span>` : ""}`
-        : vencido
+        : informado
+          ? `<span class="badge badge--sky">Pagamento informado</span><span class="cell-sub">pelo aluno em ${esc(formatDateTime(l.pagamentoInformadoEm))}</span>`
+          : vencido
           ? `<span class="badge badge--danger">Vencida</span><span class="cell-sub">há ${atraso} ${atraso === 1 ? "dia" : "dias"}</span>`
           : '<span class="badge badge--warn">A receber</span>';
       const acoes = [
-        !pago && podeLancar ? `<button type="button" class="btn btn--sm btn--pagar" data-fin="pagar" data-id="${esc(l.id)}">${icon("wallet")}<span class="btn__label">Registrar pagamento</span></button>` : "",
+        informado && podeLancar ? `<button type="button" class="btn btn--sm btn--pagar" data-fin="pagar" data-id="${esc(l.id)}">${icon("check")}<span class="btn__label">Confirmar pagamento</span></button>` : "",
+        informado && podeLancar ? `<button type="button" class="btn btn--sm btn--ghost" data-fin="recusar" data-id="${esc(l.id)}" title="O dinheiro não caiu na conta">${icon("x")}<span class="btn__label">Não recebido</span></button>` : "",
+        !pago && !informado && podeLancar ? `<button type="button" class="btn btn--sm btn--pagar" data-fin="pagar" data-id="${esc(l.id)}">${icon("wallet")}<span class="btn__label">Registrar pagamento</span></button>` : "",
         podeEditar ? `<button type="button" class="btn btn--sm btn--icon-sm" data-fin="editar" data-id="${esc(l.id)}" title="Editar lançamento" aria-label="Editar lançamento">${icon("edit")}</button>` : "",
         podeEditar ? `<button type="button" class="btn btn--sm btn--icon-sm btn--danger" data-fin="excluir" data-id="${esc(l.id)}" title="Excluir lançamento" aria-label="Excluir lançamento">${icon("trash")}</button>` : ""
       ].join("");
@@ -1922,16 +1927,32 @@
 
       try {
         if (alvo.dataset.fin === "pagar") {
+          const informado = !!l.pagamentoInformadoEm;
           const ok = await ui.confirm({
             type: "info",
-            title: "Registrar pagamento?",
-            message: `${l.alunoNome}: ${formatMoney(l.valor)} com vencimento em ${formatDate(l.vencimento)}. O pagamento fica registrado com a data de hoje.`,
-            confirmText: "Registrar pagamento"
+            title: informado ? "Confirmar pagamento?" : "Registrar pagamento?",
+            message: informado
+              ? `${l.alunoNome} informou que pagou ${formatMoney(l.valor)} por Pix em ${formatDateTime(l.pagamentoInformadoEm)}. Confira no extrato da conta antes de confirmar.`
+              : `${l.alunoNome}: ${formatMoney(l.valor)} com vencimento em ${formatDate(l.vencimento)}. O pagamento fica registrado com a data de hoje.`,
+            confirmText: informado ? "Confirmar pagamento" : "Registrar pagamento"
           });
           if (!ok) return;
           await api(`/financeiro/${id}/pagar`, { method: "PATCH" });
-          ui.toast({ type: "success", title: "Pagamento registrado", message: `${l.alunoNome}: ${formatMoney(l.valor)}` });
+          ui.toast({ type: "success", title: "Pagamento confirmado", message: `${l.alunoNome}: ${formatMoney(l.valor)}` });
           lista.load();
+          atualizarInformados();
+        } else if (alvo.dataset.fin === "recusar") {
+          const ok = await ui.confirm({
+            title: "Pagamento não recebido?",
+            message: `A mensalidade de ${l.alunoNome} volta a ficar em aberto e o aluno vê que precisa pagar de novo.`,
+            confirmText: "Não recebi",
+            danger: true
+          });
+          if (!ok) return;
+          await api(`/financeiro/${id}/recusar-informe`, { method: "PATCH" });
+          ui.toast({ type: "success", title: "Mensalidade em aberto de novo", message: l.alunoNome });
+          lista.load();
+          atualizarInformados();
         } else if (alvo.dataset.fin === "editar") {
           const salvo = await ui.dialog({
             title: "Editar lançamento",
@@ -1963,8 +1984,56 @@
       }
     });
 
+    const avisoInformados = document.getElementById("fin-informados");
+    const atualizarInformados = async () => {
+      if (!avisoInformados) return;
+      try {
+        const { total } = await api("/financeiro/informados");
+        avisoInformados.hidden = !total;
+        document.getElementById("fin-informados-texto").textContent = total === 1
+          ? "1 aluno informou que já pagou por Pix. Confira e confirme o pagamento."
+          : `${total} alunos informaram que já pagaram por Pix. Confira e confirme os pagamentos.`;
+      } catch {
+        avisoInformados.hidden = true;
+      }
+    };
+    document.getElementById("fin-ver-informados")?.addEventListener("click", () => {
+      const radio = document.querySelector('input[name="fin-status"][value="Informado"]');
+      if (radio) radio.checked = true;
+      lista.setFilter("status", "Informado");
+      document.getElementById("financeiro-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    const formPix = document.getElementById("formPix");
+    if (formPix && podeEditar) {
+      const campo = (id) => document.getElementById(id);
+      api("/financeiro/pix").then((c) => {
+        campo("pix_chave").value = c.chave || "";
+        campo("pix_nome").value = c.nomeRecebedor || "";
+        campo("pix_cidade").value = c.cidade || "";
+        campo("pix_dia").value = c.diaDisponivel || "";
+      }).catch(() => {});
+      formPix.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = formPix.querySelector('button[type="submit"]');
+        setBusy(btn, true, "Salvando...");
+        try {
+          const c = await api("/financeiro/pix", {
+            method: "PUT",
+            body: { chave: campo("pix_chave").value, nomeRecebedor: campo("pix_nome").value, cidade: campo("pix_cidade").value, diaDisponivel: campo("pix_dia").value }
+          });
+          ui.toast({ type: "success", title: c.chave ? "Chave Pix salva" : "Pix desativado", message: c.chave ? "Os alunos já podem pagar pelo app." : "Os alunos vão pagar na recepção." });
+        } catch (err) {
+          fail("Não foi possível salvar a chave Pix", err);
+        } finally {
+          setBusy(btn, false);
+        }
+      });
+    }
+
     carregarAlunos();
     lista.load();
+    atualizarInformados();
   };
 
   // Empresa

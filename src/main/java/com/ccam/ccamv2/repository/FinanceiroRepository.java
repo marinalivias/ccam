@@ -16,11 +16,14 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, UUID> {
 
     List<Financeiro> findByEmpresaIdOrderByVencimentoDesc(UUID empresaId);
 
+    long countByEmpresaIdAndStatusAndPagamentoInformadoEmIsNotNull(UUID empresaId, String status);
+
     @Query("""
             select f from Financeiro f
             where f.empresaId = :empresaId
               and (:status = '' or f.status = :status)
               and (:soVencidas = false or f.vencimento < :hoje)
+              and (:soInformados = false or f.pagamentoInformadoEm is not null)
               and f.vencimento between :inicio and :fim
               and (:like = '' or f.clienteId in (
                     select c.id from Cliente c
@@ -29,6 +32,7 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, UUID> {
     Page<Financeiro> buscar(@Param("empresaId") UUID empresaId,
                             @Param("status") String status,
                             @Param("soVencidas") boolean soVencidas,
+                            @Param("soInformados") boolean soInformados,
                             @Param("hoje") LocalDate hoje,
                             @Param("inicio") LocalDate inicio,
                             @Param("fim") LocalDate fim,

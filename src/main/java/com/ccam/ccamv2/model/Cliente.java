@@ -53,4 +53,8 @@ public class Cliente {
 
     @Column(columnDefinition = "boolean default true")
     private boolean ativo = true;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "senha_hash")
+    private String senhaHash;
 }

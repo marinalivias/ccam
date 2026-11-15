@@ -3073,3 +3073,38 @@ tr.is-inactive td strong {
     grid-template-columns: 1fr;
   }
 }
+
+/* Financeiro: coluna da direita e aviso de pagamentos informados */
+.stack {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+
+.aviso-informados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(56, 189, 248, .4);
+  border-radius: var(--radius-md);
+  background: rgba(56, 189, 248, .1);
+  color: #bae6fd;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.aviso-informados[hidden] {
+  display: none;
+}
+
+.aviso-informados .icon {
+  color: #7dd3fc;
+}
+
+.aviso-informados span {
+  flex: 1 1 220px;
+}

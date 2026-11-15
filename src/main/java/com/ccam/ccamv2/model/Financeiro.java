@@ -30,4 +30,7 @@ public class Financeiro {
 
     @Column(name = "data_pagamento")
     private LocalDate dataPagamento;
+
+    @Column(name = "pagamento_informado_em")
+    private java.time.LocalDateTime pagamentoInformadoEm;
 }

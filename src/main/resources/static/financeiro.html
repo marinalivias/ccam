@@ -37,6 +37,12 @@
               </div>
             </div>
 
+            <div class="aviso-informados" id="fin-informados" hidden>
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg>
+              <span id="fin-informados-texto"></span>
+              <button type="button" class="btn btn--sm" id="fin-ver-informados">Ver agora</button>
+            </div>
+
             <div class="toolbar toolbar--labels" id="financeiro-filtros">
               <div class="field toolbar__search">
                 <label for="fin-busca">Aluno</label>
@@ -54,6 +60,7 @@
                 <label class="segmented__item"><input type="radio" name="fin-status" value="" data-filter="status" data-default checked /><span>Todas</span></label>
                 <label class="segmented__item"><input type="radio" name="fin-status" value="Pendente" data-filter="status" /><span>A receber</span></label>
                 <label class="segmented__item"><input type="radio" name="fin-status" value="Vencido" data-filter="status" /><span>Vencidas</span></label>
+                <label class="segmented__item"><input type="radio" name="fin-status" value="Informado" data-filter="status" /><span>Informadas pelo aluno</span></label>
                 <label class="segmented__item"><input type="radio" name="fin-status" value="Pago" data-filter="status" /><span>Pagas</span></label>
               </div>
             </div>
@@ -77,38 +84,72 @@
             <div id="financeiro-paginacao"></div>
           </article>
 
-          <article class="card" data-perm="FINANCEIRO_LANCAR">
-            <div class="card__head">
-              <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg></span>
-              <div>
-                <h2>Lançar nova mensalidade</h2>
-                <p class="help">A cobrança é criada com status pendente.</p>
-              </div>
-            </div>
-
-            <form id="formFinanceiro" data-enhance>
-              <div class="field">
-                <label for="aluno_select">Selecionar aluno <span class="req" aria-hidden="true">*</span></label>
-                <select id="aluno_select" name="aluno" required>
-                  <option value="" disabled selected>Carregando alunos...</option>
-                </select>
+          <div class="stack" data-perm="FINANCEIRO_LANCAR">
+            <article class="card" data-perm="FINANCEIRO_LANCAR">
+              <div class="card__head">
+                <span class="chip-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg></span>
+                <div>
+                  <h2>Lançar nova mensalidade</h2>
+                  <p class="help">A cobrança é criada com status pendente.</p>
+                </div>
               </div>
 
-              <div class="field">
-                <label for="fin_valor">Valor (R$) <span class="req" aria-hidden="true">*</span></label>
-                <input type="text" id="fin_valor" inputmode="decimal" placeholder="Ex: 120,00" required />
-              </div>
+              <form id="formFinanceiro" data-enhance>
+                <div class="field">
+                  <label for="aluno_select">Selecionar aluno <span class="req" aria-hidden="true">*</span></label>
+                  <select id="aluno_select" name="aluno" required>
+                    <option value="" disabled selected>Carregando alunos...</option>
+                  </select>
+                </div>
 
-              <div class="field">
-                <label for="fin_vencimento">Data de vencimento <span class="req" aria-hidden="true">*</span></label>
-                <input type="date" id="fin_vencimento" name="vencimento" required />
-              </div>
+                <div class="field">
+                  <label for="fin_valor">Valor (R$) <span class="req" aria-hidden="true">*</span></label>
+                  <input type="text" id="fin_valor" inputmode="decimal" placeholder="Ex: 120,00" required />
+                </div>
 
-              <div class="form-actions">
-                <button class="btn btn--brand btn--block" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Gerar cobrança</button>
+                <div class="field">
+                  <label for="fin_vencimento">Data de vencimento <span class="req" aria-hidden="true">*</span></label>
+                  <input type="date" id="fin_vencimento" name="vencimento" required />
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn btn--brand btn--block" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Gerar cobrança</button>
+                </div>
+              </form>
+            </article>
+
+            <article class="card" data-perm="FINANCEIRO_EDITAR">
+              <div class="card__head">
+                <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg></span>
+                <div>
+                  <h2>Recebimento por Pix</h2>
+                  <p class="help">Os alunos pagam as mensalidades pelo app com esta chave.</p>
+                </div>
               </div>
-            </form>
-          </article>
+              <form id="formPix">
+                <div class="field">
+                  <label for="pix_chave">Chave Pix</label>
+                  <input id="pix_chave" type="text" maxlength="77" placeholder="CNPJ, e-mail, telefone ou chave aleatória" />
+                </div>
+                <div class="field">
+                  <label for="pix_nome">Nome de quem recebe</label>
+                  <input id="pix_nome" type="text" maxlength="60" placeholder="Como aparece no banco" />
+                </div>
+                <div class="field">
+                  <label for="pix_cidade">Cidade</label>
+                  <input id="pix_cidade" type="text" maxlength="40" placeholder="Ex: Goiânia" />
+                </div>
+                <div class="field">
+                  <label for="pix_dia">Liberar o Pix a partir do dia</label>
+                  <input id="pix_dia" type="number" min="1" max="28" inputmode="numeric" placeholder="Ex: 1" />
+                  <p class="help">Nesse dia de cada mês o aluno recebe no app o aviso de que já pode pagar.</p>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn--brand btn--block" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Salvar chave Pix</button>
+                </div>
+              </form>
+            </article>
+          </div>
         </section>
       </div>
     </main>

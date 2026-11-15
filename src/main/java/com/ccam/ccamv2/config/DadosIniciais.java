@@ -33,6 +33,8 @@ import java.util.UUID;
 @org.springframework.core.annotation.Order(1)
 public class DadosIniciais implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DadosIniciais.class);
+    public static final String ALUNO_EMAIL = "bruno.costa@exemplo.com";
+    public static final String GESTOR_NOME = "Ana Paula Moreira";
 
     private final UsuarioRepository usuarios;
     private final EmpresaRepository empresas;
@@ -48,6 +50,7 @@ public class DadosIniciais implements CommandLineRunner {
     private final String adminSenha;
     private final String gestorEmail;
     private final String gestorSenha;
+    private final String alunoSenha;
 
     public DadosIniciais(UsuarioRepository usuarios,
                          EmpresaRepository empresas,
@@ -61,7 +64,8 @@ public class DadosIniciais implements CommandLineRunner {
                          @Value("${ccam.admin.email}") String adminEmail,
                          @Value("${ccam.admin.senha}") String adminSenha,
                          @Value("${ccam.seed.gestor-email}") String gestorEmail,
-                         @Value("${ccam.seed.gestor-senha}") String gestorSenha) {
+                         @Value("${ccam.seed.gestor-senha}") String gestorSenha,
+                         @Value("${ccam.seed.aluno-senha}") String alunoSenha) {
         this.usuarios = usuarios;
         this.empresas = empresas;
         this.clientes = clientes;
@@ -75,6 +79,7 @@ public class DadosIniciais implements CommandLineRunner {
         this.adminSenha = adminSenha;
         this.gestorEmail = gestorEmail;
         this.gestorSenha = gestorSenha;
+        this.alunoSenha = alunoSenha;
     }
 
     @Override
@@ -123,7 +128,7 @@ public class DadosIniciais implements CommandLineRunner {
     }
 
     private void criarAlunoExemplo() {
-        String email = "aluno@ccam.com";
+        String email = ALUNO_EMAIL;
         String cpf = "11144477735";
         UUID empresaId = usuarios.findByEmailIgnoreCase(gestorEmail.trim()).map(Usuario::getEmpresaId).orElse(null);
         if (empresaId == null || clientes.findByEmailIgnoreCase(email).isPresent() || clientes.findByCpf(cpf).isPresent()) {
@@ -131,9 +136,10 @@ public class DadosIniciais implements CommandLineRunner {
         }
         Cliente aluno = new Cliente();
         aluno.setEmpresaId(empresaId);
-        aluno.setNome("Aluno Exemplo");
+        aluno.setNome("Bruno Henrique Costa");
         aluno.setEmail(email);
         aluno.setCpf(cpf);
+        aluno.setSenhaHash(SenhaUtil.hash(alunoSenha));
         aluno.setTelefone("(62) 99999-0000");
         aluno.setDataNascimento(LocalDate.now().withYear(2000));
         aluno.setSexo("M");
@@ -161,7 +167,7 @@ public class DadosIniciais implements CommandLineRunner {
             catalogo.findFirstByNome(l[2]).ifPresent(c -> ex.setImagemUrl(c.getImagemUrl()));
             exercicios.save(ex);
         }
-        log.info("Aluno de exemplo criado: {} (senha no app: o CPF)", email);
+        log.info("Aluno de exemplo criado: {}", email);
     }
 
     private void criarAdmin() {
@@ -196,7 +202,7 @@ public class DadosIniciais implements CommandLineRunner {
 
         Usuario gestor = new Usuario();
         gestor.setEmpresaId(e.getId());
-        gestor.setNome("Gestor " + e.getNomeFantasia());
+        gestor.setNome(GESTOR_NOME);
         gestor.setEmail(gestorEmail.trim().toLowerCase());
         gestor.setSenhaHash(SenhaUtil.hash(gestorSenha));
         gestor.setPerfil(Perfil.GESTOR);

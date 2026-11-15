@@ -14,6 +14,7 @@ import com.ccam.ccamv2.security.RequerPermissao;
 import com.ccam.ccamv2.service.ClienteService;
 import com.ccam.ccamv2.service.LogService;
 import com.ccam.ccamv2.service.Paginacao;
+import com.ccam.ccamv2.service.PixService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -42,13 +43,15 @@ public class FinanceiroController {
     private final ClienteRepository clienteRepository;
     private final ClienteService clienteService;
     private final LogService logService;
+    private final PixService pixService;
 
     public FinanceiroController(FinanceiroRepository repository, ClienteRepository clienteRepository,
-                                ClienteService clienteService, LogService logService) {
+                                ClienteService clienteService, LogService logService, PixService pixService) {
         this.repository = repository;
         this.clienteRepository = clienteRepository;
         this.clienteService = clienteService;
         this.logService = logService;
+        this.pixService = pixService;
     }
 
     @GetMapping
@@ -61,15 +64,79 @@ public class FinanceiroController {
             @RequestParam(required = false) Integer pagina,
             @RequestParam(required = false) Integer tamanho) {
         boolean vencidas = "Vencido".equals(status);
-        String s = vencidas ? "Pendente" : (status != null && STATUS.contains(status) ? status : "");
+        boolean informados = "Informado".equals(status);
+        String s = vencidas || informados ? "Pendente" : (status != null && STATUS.contains(status) ? status : "");
         YearMonth m = Paginacao.mes(mes);
         LocalDate inicio = m != null ? m.atDay(1) : Paginacao.DATA_MINIMA;
         LocalDate fim = m != null ? m.atEndOfMonth() : Paginacao.DATA_MAXIMA;
 
-        Page<Financeiro> page = repository.buscar(usuario.getEmpresaId(), s, vencidas, LocalDate.now(), inicio, fim,
+        Page<Financeiro> page = repository.buscar(usuario.getEmpresaId(), s, vencidas, informados, LocalDate.now(), inicio, fim,
                 Paginacao.like(Paginacao.termo(busca)),
                 Paginacao.criar(pagina, tamanho, Sort.by(Sort.Direction.DESC, "vencimento").and(Sort.by("id"))));
         return ResponseEntity.ok(PaginaResposta.de(page, comNomes(page.getContent())));
+    }
+
+    @GetMapping("/informados")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public Map<String, Long> informados(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario) {
+        return Map.of("total", repository.countByEmpresaIdAndStatusAndPagamentoInformadoEmIsNotNull(usuario.getEmpresaId(), "Pendente"));
+    }
+
+    @PatchMapping("/{id}/recusar-informe")
+    @RequerPermissao(Permissao.FINANCEIRO_LANCAR)
+    @Transactional
+    public ResponseEntity<FinanceiroResponse> recusarInforme(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                             @PathVariable UUID id) {
+        Financeiro f = daEmpresa(usuario, id);
+        if (f.getPagamentoInformadoEm() != null && !"Pago".equals(f.getStatus())) {
+            f.setPagamentoInformadoEm(null);
+            f = repository.save(f);
+            logService.registrar(usuario, LogService.FINANCEIRO, f.getId(), f.getClienteId(), LogService.EDICAO,
+                    "Pagamento informado pelo aluno não foi encontrado: " + resumo(f));
+        }
+        return ResponseEntity.ok(FinanceiroResponse.de(f, clienteRepository.findById(f.getClienteId()).orElse(null)));
+    }
+
+    @GetMapping("/pix")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public Map<String, Object> pix(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario) {
+        return dadosPix(pixService.registro(usuario.getEmpresaId()).orElse(null));
+    }
+
+    @PutMapping("/pix")
+    @RequerPermissao(Permissao.FINANCEIRO_EDITAR)
+    public Map<String, Object> salvarPix(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                         @RequestBody Map<String, Object> dados) {
+        Object dia = dados.get("diaDisponivel");
+        Integer diaDisponivel = null;
+        if (dia != null && !dia.toString().isBlank()) {
+            try {
+                diaDisponivel = Integer.valueOf(dia.toString().trim());
+            } catch (NumberFormatException e) {
+                throw new NegocioException("Informe um dia válido para liberar o Pix.");
+            }
+        }
+        var c = pixService.salvar(usuario.getEmpresaId(), texto(dados.get("chave")), texto(dados.get("nomeRecebedor")),
+                texto(dados.get("cidade")), diaDisponivel);
+        return dadosPix(c);
+    }
+
+    private static String texto(Object v) {
+        return v == null ? null : v.toString();
+    }
+
+    private static Map<String, Object> dadosPix(com.ccam.ccamv2.model.ConfigPix c) {
+        Map<String, Object> r = new java.util.HashMap<>();
+        if (c == null) {
+            return r;
+        }
+        if (c.getChave() != null) {
+            r.put("chave", c.getChave());
+            r.put("nomeRecebedor", c.getNomeRecebedor());
+            r.put("cidade", c.getCidade());
+        }
+        r.put("diaDisponivel", c.getDiaDisponivel());
+        return r;
     }
 
     @GetMapping("/cliente/{clienteId}")
@@ -143,6 +210,7 @@ public class FinanceiroController {
                 }
             } else {
                 atual.setDataPagamento(null);
+                atual.setPagamentoInformadoEm(null);
             }
             atual = repository.save(atual);
             logService.registrar(usuario, LogService.FINANCEIRO, atual.getId(), atual.getClienteId(), LogService.EDICAO,

@@ -9,4 +9,7 @@ import java.util.UUID;
 
 public interface LogAlteracaoRepository extends JpaRepository<LogAlteracao, UUID> {
     Page<LogAlteracao> findByEmpresaIdAndAlunoId(UUID empresaId, UUID alunoId, Pageable pageable);
+
+    java.util.List<LogAlteracao> findByAlunoIdAndEntidadeAndUsuarioIdIsNotNullAndDataHoraAfterOrderByDataHoraDesc(
+            UUID alunoId, String entidade, java.time.LocalDateTime depois);
 }
