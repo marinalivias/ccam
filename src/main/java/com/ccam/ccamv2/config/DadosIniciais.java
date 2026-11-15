@@ -142,7 +142,7 @@ public class DadosIniciais implements CommandLineRunner {
                 {"Quarta-feira", "Costas", "Puxada frontal", "4", "10", "30kg"},
                 {"Quarta-feira", "Bíceps", "Rosca direta", "3", "12", "10kg"},
                 {"Sexta-feira", "Pernas", "Agachamento livre", "4", "12", "30kg"},
-                {"Sexta-feira", "Abdomen", "Prancha", "3", "45 segundos", null}
+                {"Sexta-feira", "Abdômen", "Prancha", "3", "45 segundos", null}
         };
         for (String[] l : ficha) {
             Exercicio ex = new Exercicio();

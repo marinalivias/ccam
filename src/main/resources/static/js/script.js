@@ -240,6 +240,18 @@
     return isNaN(d) ? "" : d.toLocaleDateString("pt-BR");
   };
 
+  const numeroBR = (texto) => {
+    let t = String(texto ?? "").trim().replace(/\s/g, "");
+    if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(t);
+    return isNaN(n) ? null : n;
+  };
+  const decimalBR = (v, casas) => {
+    if (v === null || v === undefined || v === "") return "";
+    const n = Number(v);
+    return casas === undefined ? String(n).replace(".", ",") : n.toFixed(casas).replace(".", ",");
+  };
+
   const formatMoney = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const todayIso = () => {
@@ -1141,8 +1153,8 @@
       campo("email").value = a.email || "";
       campo("celular").value = formatPhone(a.telefone);
       campo("telefone_fixo").value = formatPhone(a.telefoneFixo);
-      campo("peso").value = a.peso ?? "";
-      campo("altura").value = a.altura ?? "";
+      campo("peso").value = decimalBR(a.peso);
+      campo("altura").value = decimalBR(a.altura);
       campo("condicao_saude").value = a.condicaoSaude || "";
       title.textContent = `Editando: ${a.nome}`;
       subtitle.textContent = `Cadastrado em ${formatDate(a.dataCadastro)}${a.dataAtualizacao ? `, última alteração em ${formatDateTime(a.dataAtualizacao)}` : ""}. As mudanças ficam registradas no histórico.`;
@@ -1161,7 +1173,7 @@
         setBusy(btnSalvar, true, "Salvando...");
 
         const valor = (id) => campo(id)?.value.trim() || null;
-        const numero = (id) => { const n = parseFloat(campo(id)?.value); return isNaN(n) ? null : n; };
+        const numero = (id) => numeroBR(campo(id)?.value);
 
         const dadosCliente = {
           nome: valor("nome"),
@@ -1729,7 +1741,7 @@
     <p class="help">Aluno: <strong>${esc(l.alunoNome)}</strong>. A alteração fica registrada no histórico do aluno.</p>
     <div class="fgrid">
       <div class="field col-2"><label for="ed_valor">Valor (R$) <span class="req" aria-hidden="true">*</span></label>
-        <input id="ed_valor" name="valor" type="number" step="0.01" min="0.01" inputmode="decimal" required value="${esc(l.valor)}" /></div>
+        <input id="ed_valor" name="valor" type="text" inputmode="decimal" required value="${esc(decimalBR(l.valor, 2))}" placeholder="Ex: 120,00" /></div>
       <div class="field col-2"><label for="ed_venc">Vencimento <span class="req" aria-hidden="true">*</span></label>
         <input id="ed_venc" name="vencimento" type="date" required value="${esc(l.vencimento)}" /></div>
       <div class="field col-2"><label for="ed_status">Status <span class="req" aria-hidden="true">*</span></label>
@@ -1823,7 +1835,7 @@
             method: "POST",
             body: {
               clienteId: selectAluno.value,
-              valor: parseFloat(document.getElementById("fin_valor").value),
+              valor: numeroBR(document.getElementById("fin_valor").value),
               vencimento: document.getElementById("fin_vencimento").value,
               status: "Pendente"
             }
@@ -1858,7 +1870,7 @@
             confirmText: "Salvar alterações",
             onConfirm: (f) => api(`/financeiro/${id}`, {
               method: "PUT",
-              body: { valor: parseFloat(f.elements.valor.value), vencimento: f.elements.vencimento.value, status: f.elements.status.value }
+              body: { valor: numeroBR(f.elements.valor.value), vencimento: f.elements.vencimento.value, status: f.elements.status.value }
             })
           });
           if (salvo) {
@@ -2259,7 +2271,7 @@
       <div class="field col-4"><label for="pr_nome">Nome <span class="req" aria-hidden="true">*</span></label>
         <input id="pr_nome" name="nome" type="text" maxlength="120" required value="${esc(p.nome)}" placeholder="Ex: Whey protein 900g" /></div>
       <div class="field col-2"><label for="pr_preco">Preço (R$) <span class="req" aria-hidden="true">*</span></label>
-        <input id="pr_preco" name="preco" type="number" min="0.01" step="0.01" inputmode="decimal" required value="${esc(p.preco)}" placeholder="Ex: 129.90" /></div>
+        <input id="pr_preco" name="preco" type="text" inputmode="decimal" required value="${esc(decimalBR(p.preco, 2))}" placeholder="Ex: 129,90" /></div>
       <div class="field col-6"><label for="pr_categoria">Categoria</label>
         <input id="pr_categoria" name="categoria" type="text" maxlength="60" value="${esc(p.categoria)}" placeholder="Ex: Suplementos, Roupas, Acessórios" /></div>
       <div class="field col-6"><label for="pr_descricao">Descrição</label>
@@ -2270,7 +2282,7 @@
 
   const lerProduto = (form) => ({
     nome: form.elements.nome.value.trim(),
-    preco: parseFloat(form.elements.preco.value),
+    preco: numeroBR(form.elements.preco.value),
     categoria: form.elements.categoria.value.trim() || null,
     descricao: form.elements.descricao.value.trim() || null,
     ativo: form.elements.ativo.checked,

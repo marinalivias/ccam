@@ -91,6 +91,11 @@ public class LogService {
             if (valor == null) {
                 return "(vazio)";
             }
+            if (valor instanceof Double || valor instanceof Float) {
+                java.text.NumberFormat f = java.text.NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag("pt-BR"));
+                f.setMaximumFractionDigits(2);
+                return f.format(((Number) valor).doubleValue());
+            }
             String t = String.valueOf(valor).trim();
             return t.isEmpty() ? "(vazio)" : t;
         }
