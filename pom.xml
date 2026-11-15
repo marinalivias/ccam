@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.ccam</groupId>
-    <artifactId>ccam-v2</artifactId>
+    <artifactId>ccam</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ccam-v2</name>
-    <description>ccam-v2</description>
+    <name>ccam</name>
+    <description>Sistema de gestao de academias</description>
     <url/>
     <licenses>
         <license/>

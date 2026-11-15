@@ -1,0 +1,268 @@
+package com.ccam.controller;
+
+import com.ccam.dto.FinanceiroResponse;
+import com.ccam.dto.PaginaResposta;
+import com.ccam.exception.NegocioException;
+import com.ccam.model.Cliente;
+import com.ccam.model.Financeiro;
+import com.ccam.model.Usuario;
+import com.ccam.repository.ClienteRepository;
+import com.ccam.repository.FinanceiroRepository;
+import com.ccam.security.AuthInterceptor;
+import com.ccam.security.Permissao;
+import com.ccam.security.RequerPermissao;
+import com.ccam.service.ClienteService;
+import com.ccam.service.LogService;
+import com.ccam.service.Paginacao;
+import com.ccam.service.PixService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/financeiro")
+@CrossOrigin(origins = "*")
+public class FinanceiroController {
+    private static final Set<String> STATUS = Set.of("Pago", "Pendente");
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    private final FinanceiroRepository repository;
+    private final ClienteRepository clienteRepository;
+    private final ClienteService clienteService;
+    private final LogService logService;
+    private final PixService pixService;
+
+    public FinanceiroController(FinanceiroRepository repository, ClienteRepository clienteRepository,
+                                ClienteService clienteService, LogService logService, PixService pixService) {
+        this.repository = repository;
+        this.clienteRepository = clienteRepository;
+        this.clienteService = clienteService;
+        this.logService = logService;
+        this.pixService = pixService;
+    }
+
+    @GetMapping
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public ResponseEntity<PaginaResposta<FinanceiroResponse>> listar(
+            @RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+            @RequestParam(required = false) String busca,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String mes,
+            @RequestParam(required = false) Integer pagina,
+            @RequestParam(required = false) Integer tamanho) {
+        boolean vencidas = "Vencido".equals(status);
+        boolean informados = "Informado".equals(status);
+        String s = vencidas || informados ? "Pendente" : (status != null && STATUS.contains(status) ? status : "");
+        YearMonth m = Paginacao.mes(mes);
+        LocalDate inicio = m != null ? m.atDay(1) : Paginacao.DATA_MINIMA;
+        LocalDate fim = m != null ? m.atEndOfMonth() : Paginacao.DATA_MAXIMA;
+
+        Page<Financeiro> page = repository.buscar(usuario.getEmpresaId(), s, vencidas, informados, LocalDate.now(), inicio, fim,
+                Paginacao.like(Paginacao.termo(busca)),
+                Paginacao.criar(pagina, tamanho, Sort.by(Sort.Direction.DESC, "vencimento").and(Sort.by("id"))));
+        return ResponseEntity.ok(PaginaResposta.de(page, comNomes(page.getContent())));
+    }
+
+    @GetMapping("/informados")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public Map<String, Long> informados(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario) {
+        return Map.of("total", repository.countByEmpresaIdAndStatusAndPagamentoInformadoEmIsNotNull(usuario.getEmpresaId(), "Pendente"));
+    }
+
+    @PatchMapping("/{id}/recusar-informe")
+    @RequerPermissao(Permissao.FINANCEIRO_LANCAR)
+    @Transactional
+    public ResponseEntity<FinanceiroResponse> recusarInforme(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                             @PathVariable UUID id) {
+        Financeiro f = daEmpresa(usuario, id);
+        if (f.getPagamentoInformadoEm() != null && !"Pago".equals(f.getStatus())) {
+            f.setPagamentoInformadoEm(null);
+            f = repository.save(f);
+            logService.registrar(usuario, LogService.FINANCEIRO, f.getId(), f.getClienteId(), LogService.EDICAO,
+                    "Pagamento informado pelo aluno não foi encontrado: " + resumo(f));
+        }
+        return ResponseEntity.ok(FinanceiroResponse.de(f, clienteRepository.findById(f.getClienteId()).orElse(null)));
+    }
+
+    @GetMapping("/pix")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public Map<String, Object> pix(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario) {
+        return dadosPix(pixService.registro(usuario.getEmpresaId()).orElse(null));
+    }
+
+    @PutMapping("/pix")
+    @RequerPermissao(Permissao.FINANCEIRO_EDITAR)
+    public Map<String, Object> salvarPix(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                         @RequestBody Map<String, Object> dados) {
+        Object dia = dados.get("diaDisponivel");
+        Integer diaDisponivel = null;
+        if (dia != null && !dia.toString().isBlank()) {
+            try {
+                diaDisponivel = Integer.valueOf(dia.toString().trim());
+            } catch (NumberFormatException e) {
+                throw new NegocioException("Informe um dia válido para liberar o Pix.");
+            }
+        }
+        var c = pixService.salvar(usuario.getEmpresaId(), texto(dados.get("chave")), texto(dados.get("nomeRecebedor")),
+                texto(dados.get("cidade")), diaDisponivel);
+        return dadosPix(c);
+    }
+
+    private static String texto(Object v) {
+        return v == null ? null : v.toString();
+    }
+
+    private static Map<String, Object> dadosPix(com.ccam.model.ConfigPix c) {
+        Map<String, Object> r = new java.util.HashMap<>();
+        if (c == null) {
+            return r;
+        }
+        if (c.getChave() != null) {
+            r.put("chave", c.getChave());
+            r.put("nomeRecebedor", c.getNomeRecebedor());
+            r.put("cidade", c.getCidade());
+        }
+        r.put("diaDisponivel", c.getDiaDisponivel());
+        return r;
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public ResponseEntity<List<FinanceiroResponse>> buscarPorCliente(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                                     @PathVariable UUID clienteId) {
+        Cliente aluno = aluno(usuario, clienteId);
+        return ResponseEntity.ok(repository.findByClienteIdOrderByVencimentoDesc(clienteId).stream()
+                .map(f -> FinanceiroResponse.de(f, aluno)).toList());
+    }
+
+    @PostMapping
+    @RequerPermissao(Permissao.FINANCEIRO_LANCAR)
+    @Transactional
+    public ResponseEntity<FinanceiroResponse> registrarCobranca(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                                @RequestBody Financeiro financeiro) {
+        Cliente aluno = aluno(usuario, financeiro.getClienteId());
+        validar(financeiro);
+        financeiro.setId(null);
+        financeiro.setEmpresaId(usuario.getEmpresaId());
+        if (financeiro.getStatus() == null || financeiro.getStatus().isBlank()) {
+            financeiro.setStatus("Pendente");
+        }
+        Financeiro salvo = repository.save(financeiro);
+        logService.registrar(usuario, LogService.FINANCEIRO, salvo.getId(), salvo.getClienteId(), LogService.CRIACAO,
+                "Mensalidade lançada: " + resumo(salvo));
+        return ResponseEntity.ok(FinanceiroResponse.de(salvo, aluno));
+    }
+
+    @PatchMapping("/{id}/pagar")
+    @RequerPermissao(Permissao.FINANCEIRO_LANCAR)
+    @Transactional
+    public ResponseEntity<FinanceiroResponse> marcarComoPago(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                             @PathVariable UUID id) {
+        Financeiro f = daEmpresa(usuario, id);
+        if (!"Pago".equals(f.getStatus())) {
+            f.setStatus("Pago");
+            f.setDataPagamento(LocalDate.now());
+            f = repository.save(f);
+            logService.registrar(usuario, LogService.FINANCEIRO, f.getId(), f.getClienteId(), LogService.EDICAO,
+                    "Pagamento registrado: " + resumo(f));
+        }
+        return ResponseEntity.ok(FinanceiroResponse.de(f, clienteRepository.findById(f.getClienteId()).orElse(null)));
+    }
+
+    @PutMapping("/{id}")
+    @RequerPermissao(Permissao.FINANCEIRO_EDITAR)
+    @Transactional
+    public ResponseEntity<FinanceiroResponse> editar(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                     @PathVariable UUID id,
+                                                     @RequestBody Financeiro dados) {
+        Financeiro atual = daEmpresa(usuario, id);
+        validar(dados);
+        if (dados.getStatus() == null || !STATUS.contains(dados.getStatus())) {
+            throw new NegocioException("Status inválido. Use Pago ou Pendente.");
+        }
+
+        LogService.Diferencas dif = new LogService.Diferencas()
+                .campo("Valor", moeda(atual.getValor()), moeda(dados.getValor()))
+                .campo("Vencimento", atual.getVencimento().format(DATA_BR), dados.getVencimento().format(DATA_BR))
+                .campo("Status", atual.getStatus(), dados.getStatus());
+        if (!dif.vazio()) {
+            atual.setValor(dados.getValor());
+            atual.setVencimento(dados.getVencimento());
+            atual.setStatus(dados.getStatus());
+            if ("Pago".equals(dados.getStatus())) {
+                if (dados.getDataPagamento() != null) {
+                    atual.setDataPagamento(dados.getDataPagamento());
+                } else if (atual.getDataPagamento() == null) {
+                    atual.setDataPagamento(LocalDate.now());
+                }
+            } else {
+                atual.setDataPagamento(null);
+                atual.setPagamentoInformadoEm(null);
+            }
+            atual = repository.save(atual);
+            logService.registrar(usuario, LogService.FINANCEIRO, atual.getId(), atual.getClienteId(), LogService.EDICAO,
+                    "Mensalidade alterada\n" + dif);
+        }
+        return ResponseEntity.ok(FinanceiroResponse.de(atual, clienteRepository.findById(atual.getClienteId()).orElse(null)));
+    }
+
+    @DeleteMapping("/{id}")
+    @RequerPermissao(Permissao.FINANCEIRO_EDITAR)
+    @Transactional
+    public ResponseEntity<Map<String, String>> excluir(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                       @PathVariable UUID id) {
+        Financeiro atual = daEmpresa(usuario, id);
+        repository.delete(atual);
+        logService.registrar(usuario, LogService.FINANCEIRO, atual.getId(), atual.getClienteId(), LogService.EXCLUSAO,
+                "Mensalidade excluída: " + resumo(atual));
+        return ResponseEntity.ok(Map.of("mensagem", "Lançamento excluído."));
+    }
+
+    private Function<Financeiro, FinanceiroResponse> comNomes(List<Financeiro> lista) {
+        Set<UUID> ids = lista.stream().map(Financeiro::getClienteId).collect(Collectors.toSet());
+        Map<UUID, Cliente> alunos = clienteRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(Cliente::getId, Function.identity()));
+        return f -> FinanceiroResponse.de(f, alunos.get(f.getClienteId()));
+    }
+
+    private Cliente aluno(Usuario usuario, UUID clienteId) {
+        return clienteService.buscarDaEmpresa(clienteId, usuario.getEmpresaId())
+                .orElseThrow(() -> new NegocioException("Aluno não encontrado."));
+    }
+
+    private Financeiro daEmpresa(Usuario usuario, UUID id) {
+        return repository.findById(id)
+                .filter(f -> usuario.getEmpresaId() != null && usuario.getEmpresaId().equals(f.getEmpresaId()))
+                .orElseThrow(() -> new NegocioException("Lançamento não encontrado."));
+    }
+
+    private void validar(Financeiro f) {
+        if (f.getValor() == null || f.getValor() <= 0) {
+            throw new NegocioException("Informe um valor maior que zero.");
+        }
+        if (f.getVencimento() == null) {
+            throw new NegocioException("Informe a data de vencimento.");
+        }
+    }
+
+    private static String moeda(Double valor) {
+        return valor == null ? null : String.format(Locale.forLanguageTag("pt-BR"), "R$ %,.2f", valor);
+    }
+
+    private static String resumo(Financeiro f) {
+        return moeda(f.getValor()) + ", vencimento " + f.getVencimento().format(DATA_BR) + ", " + f.getStatus();
+    }
+}
