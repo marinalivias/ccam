@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CatalogoExercicioRepository extends JpaRepository<CatalogoExercicio, Long> {
+    java.util.Optional<CatalogoExercicio> findFirstByNome(String nome);
 }

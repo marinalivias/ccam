@@ -8,6 +8,7 @@ import com.ccam.ccamv2.model.Financeiro;
 import com.ccam.ccamv2.model.Mural;
 import com.ccam.ccamv2.model.Produto;
 import com.ccam.ccamv2.model.Usuario;
+import com.ccam.ccamv2.repository.CatalogoExercicioRepository;
 import com.ccam.ccamv2.repository.ClienteRepository;
 import com.ccam.ccamv2.repository.ConfigLojaRepository;
 import com.ccam.ccamv2.repository.EmpresaRepository;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@org.springframework.core.annotation.Order(1)
 public class DadosIniciais implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DadosIniciais.class);
 
@@ -40,6 +42,7 @@ public class DadosIniciais implements CommandLineRunner {
     private final ExercicioRepository exercicios;
     private final ProdutoRepository produtos;
     private final ConfigLojaRepository configLoja;
+    private final CatalogoExercicioRepository catalogo;
 
     private final String adminEmail;
     private final String adminSenha;
@@ -54,6 +57,7 @@ public class DadosIniciais implements CommandLineRunner {
                          ExercicioRepository exercicios,
                          ProdutoRepository produtos,
                          ConfigLojaRepository configLoja,
+                         CatalogoExercicioRepository catalogo,
                          @Value("${ccam.admin.email}") String adminEmail,
                          @Value("${ccam.admin.senha}") String adminSenha,
                          @Value("${ccam.seed.gestor-email}") String gestorEmail,
@@ -66,6 +70,7 @@ public class DadosIniciais implements CommandLineRunner {
         this.exercicios = exercicios;
         this.produtos = produtos;
         this.configLoja = configLoja;
+        this.catalogo = catalogo;
         this.adminEmail = adminEmail;
         this.adminSenha = adminSenha;
         this.gestorEmail = gestorEmail;
@@ -153,6 +158,7 @@ public class DadosIniciais implements CommandLineRunner {
             ex.setSeries(l[3]);
             ex.setRepeticoes(l[4]);
             ex.setCarga(l[5]);
+            catalogo.findFirstByNome(l[2]).ifPresent(c -> ex.setImagemUrl(c.getImagemUrl()));
             exercicios.save(ex);
         }
         log.info("Aluno de exemplo criado: {} (senha no app: o CPF)", email);
