@@ -177,7 +177,9 @@ textarea {
   height: 38px;
   flex: none;
   border-radius: 11px;
-  background: url("../logo.svg") center / cover no-repeat;
+  background:
+    radial-gradient(17px 17px at 30% 30%, rgba(255, 255, 255, .55), transparent 55%),
+    linear-gradient(135deg, #7c3aed, #22c55e);
   box-shadow: 0 12px 26px rgba(124, 58, 237, .32), inset 0 0 0 1px rgba(255, 255, 255, .14);
 }
 
