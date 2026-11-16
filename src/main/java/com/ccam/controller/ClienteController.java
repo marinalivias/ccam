@@ -27,10 +27,26 @@ import java.util.UUID;
 public class ClienteController {
     private final ClienteService service;
     private final LogAlteracaoRepository logs;
+    private final com.ccam.service.FotoService fotoService;
 
-    public ClienteController(ClienteService service, LogAlteracaoRepository logs) {
+    public ClienteController(ClienteService service, LogAlteracaoRepository logs, com.ccam.service.FotoService fotoService) {
         this.service = service;
         this.logs = logs;
+        this.fotoService = fotoService;
+    }
+
+    @GetMapping("/{id}/foto")
+    @RequerPermissao({Permissao.ALUNOS_VER, Permissao.TREINOS_VER, Permissao.FINANCEIRO_VER, Permissao.CRM_VER})
+    public ResponseEntity<java.util.Map<String, String>> foto(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                              @PathVariable UUID id) {
+        return fotoService.buscar(encontrar(usuario, id)).map(ResponseEntity::ok).orElse(ResponseEntity.noContent().build());
+    }
+
+    @PatchMapping("/{id}/senha-app")
+    @RequerPermissao(Permissao.ALUNOS_EDITAR)
+    public ResponseEntity<ClienteResponse> redefinirSenhaApp(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                             @PathVariable UUID id) {
+        return ResponseEntity.ok(ClienteResponse.de(service.redefinirSenhaApp(usuario, id)));
     }
 
     @PostMapping

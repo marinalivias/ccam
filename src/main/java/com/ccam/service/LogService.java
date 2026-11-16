@@ -45,6 +45,19 @@ public class LogService {
         repository.save(log);
     }
 
+    public void registrarPeloSistema(UUID empresaId, String entidade, UUID registroId, UUID alunoId, String acao, String descricao) {
+        LogAlteracao log = new LogAlteracao();
+        log.setEmpresaId(empresaId);
+        log.setEntidade(entidade);
+        log.setRegistroId(registroId);
+        log.setAlunoId(alunoId);
+        log.setAcao(acao);
+        log.setDescricao(descricao);
+        log.setUsuarioNome("Sistema (automático)");
+        log.setDataHora(LocalDateTime.now());
+        repository.save(log);
+    }
+
     public void registrar(Usuario autor, String entidade, UUID registroId, UUID alunoId, String acao, String descricao) {
         LogAlteracao log = new LogAlteracao();
         log.setEmpresaId(autor.getEmpresaId());

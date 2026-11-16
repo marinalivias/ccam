@@ -68,6 +68,16 @@ public class AlunoAuthService {
         clientes.save(aluno);
     }
 
+    @Transactional
+    public void pedirNovaSenha(String email) {
+        clientes.findByEmailIgnoreCase(email == null ? "" : email.trim())
+                .filter(Cliente::isAtivo)
+                .ifPresent(c -> {
+                    c.setPedidoSenhaEm(LocalDateTime.now());
+                    clientes.save(c);
+                });
+    }
+
     private static boolean senhaConfere(Cliente c, String senha) {
         if (senha == null || senha.isEmpty()) {
             return false;

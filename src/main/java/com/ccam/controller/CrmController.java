@@ -24,10 +24,80 @@ public class CrmController {
 
     private final ClienteRepository clientes;
     private final TreinoRealizadoRepository realizados;
+    private final com.ccam.repository.FinanceiroRepository financeiro;
 
-    public CrmController(ClienteRepository clientes, TreinoRealizadoRepository realizados) {
+    public CrmController(ClienteRepository clientes, TreinoRealizadoRepository realizados,
+                         com.ccam.repository.FinanceiroRepository financeiro) {
         this.clientes = clientes;
         this.realizados = realizados;
+        this.financeiro = financeiro;
+    }
+
+    @GetMapping("/financeiro")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public Map<String, Object> financeiro(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario) {
+        UUID empresaId = usuario.getEmpresaId();
+        LocalDate hoje = LocalDate.now();
+        YearMonth mes = YearMonth.now();
+        List<com.ccam.model.Financeiro> todos = financeiro.findByEmpresaIdOrderByVencimentoDesc(empresaId);
+
+        double recebidoMes = 0;
+        double aReceber = 0;
+        double vencido = 0;
+        long informados = 0;
+        Set<UUID> inadimplentes = new HashSet<>();
+        Map<YearMonth, Double> recebidoPorMes = new TreeMap<>();
+        Map<YearMonth, Double> lancadoPorMes = new TreeMap<>();
+        for (int i = 5; i >= 0; i--) {
+            recebidoPorMes.put(mes.minusMonths(i), 0.0);
+            lancadoPorMes.put(mes.minusMonths(i), 0.0);
+        }
+        for (var f : todos) {
+            double valor = f.getValor() == null ? 0 : f.getValor();
+            boolean pago = "Pago".equals(f.getStatus());
+            if (f.getVencimento() != null && lancadoPorMes.containsKey(YearMonth.from(f.getVencimento()))) {
+                lancadoPorMes.merge(YearMonth.from(f.getVencimento()), valor, Double::sum);
+            }
+            if (pago) {
+                LocalDate dia = f.getDataPagamento() != null ? f.getDataPagamento() : f.getVencimento();
+                if (dia != null) {
+                    YearMonth m = YearMonth.from(dia);
+                    if (recebidoPorMes.containsKey(m)) {
+                        recebidoPorMes.merge(m, valor, Double::sum);
+                    }
+                    if (m.equals(mes)) {
+                        recebidoMes += valor;
+                    }
+                }
+                continue;
+            }
+            if (f.getPagamentoInformadoEm() != null) {
+                informados++;
+            }
+            if (f.getVencimento() == null) {
+                continue;
+            }
+            if (f.getVencimento().isBefore(hoje)) {
+                vencido += valor;
+                inadimplentes.add(f.getClienteId());
+            } else if (YearMonth.from(f.getVencimento()).equals(mes)) {
+                aReceber += valor;
+            }
+        }
+        long ativos = clientes.countByEmpresaIdAndAtivoTrue(empresaId);
+        List<Map<String, Object>> meses = new ArrayList<>();
+        for (YearMonth m : recebidoPorMes.keySet()) {
+            meses.add(Map.of("mes", m.toString(), "recebido", recebidoPorMes.get(m), "lancado", lancadoPorMes.get(m)));
+        }
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("recebidoMes", recebidoMes);
+        r.put("aReceber", aReceber);
+        r.put("vencido", vencido);
+        r.put("inadimplentes", inadimplentes.size());
+        r.put("percentualInadimplencia", ativos == 0 ? 0 : Math.round(inadimplentes.size() * 100.0 / ativos));
+        r.put("informados", informados);
+        r.put("meses", meses);
+        return r;
     }
 
     @GetMapping("/resumo")

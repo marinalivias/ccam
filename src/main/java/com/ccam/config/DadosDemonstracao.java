@@ -34,12 +34,16 @@ public class DadosDemonstracao implements CommandLineRunner {
     private final TreinoRealizadoRepository realizados;
     private final TreinoRealizadoService treinoRealizado;
     private final ConfigPixRepository configPix;
+    private final ConfigMensalidadeRepository configMensalidade;
+    private final com.ccam.service.MensalidadeAutomaticaService automaticas;
 
     public DadosDemonstracao(@Value("${ccam.demo:true}") boolean ativo,
                              @Value("${ccam.seed.gestor-email}") String gestorEmail,
                              UsuarioRepository usuarios, ClienteRepository clientes, ExercicioRepository exercicios,
                              MuralRepository mural, FinanceiroRepository financeiro, TreinoRealizadoRepository realizados,
-                             TreinoRealizadoService treinoRealizado, ConfigPixRepository configPix) {
+                             TreinoRealizadoService treinoRealizado, ConfigPixRepository configPix,
+                             ConfigMensalidadeRepository configMensalidade,
+                             com.ccam.service.MensalidadeAutomaticaService automaticas) {
         this.ativo = ativo;
         this.gestorEmail = gestorEmail;
         this.usuarios = usuarios;
@@ -50,6 +54,8 @@ public class DadosDemonstracao implements CommandLineRunner {
         this.realizados = realizados;
         this.treinoRealizado = treinoRealizado;
         this.configPix = configPix;
+        this.configMensalidade = configMensalidade;
+        this.automaticas = automaticas;
     }
 
     @Override
@@ -85,6 +91,7 @@ public class DadosDemonstracao implements CommandLineRunner {
         mensalidades(empresaId, aluno, hoje);
         treinos(aluno, hoje);
         pixDeExemplo(empresaId);
+        historicoFinanceiro(empresaId, aluno.getId(), hoje);
         log.info("Dados de demonstração prontos: {} faz aniversário hoje", ALUNO);
     }
 
@@ -194,6 +201,52 @@ public class DadosDemonstracao implements CommandLineRunner {
         int base = Integer.parseInt(m.group());
         int valor = Math.max(1, (int) Math.round(base * (1 - 0.08 * semanasAtras)));
         return valor + "kg";
+    }
+
+    private void historicoFinanceiro(UUID empresaId, UUID alunoExemplo, LocalDate hoje) {
+        if (configMensalidade.existsById(empresaId)) {
+            return;
+        }
+        List<Cliente> outros = clientes.findByEmpresaIdAndAtivoTrueOrderByNomeAsc(empresaId).stream()
+                .filter(c -> !c.getId().equals(alunoExemplo))
+                .toList();
+        double[] valores = {99.90, 129.90, 149.90};
+        for (int i = 0; i < outros.size(); i++) {
+            Cliente c = outros.get(i);
+            boolean novato = i >= outros.size() - 2;
+            int meses = novato ? 0 : 3 + i % 3;
+            if (!novato && c.getDataCadastro() != null && c.getDataCadastro().toLocalDate().isAfter(hoje.minusMonths(meses))) {
+                c.setDataCadastro(hoje.minusMonths(meses).withDayOfMonth(5).atTime(9, 0));
+                clientes.save(c);
+            }
+            if (!financeiro.findByClienteIdOrderByVencimentoDesc(c.getId()).isEmpty()) {
+                continue;
+            }
+            double valor = valores[i % valores.length];
+            for (int m = meses; m >= 0; m--) {
+                LocalDate venc = hoje.minusMonths(m).withDayOfMonth(10);
+                Financeiro f = new Financeiro();
+                f.setEmpresaId(empresaId);
+                f.setClienteId(c.getId());
+                f.setVencimento(venc);
+                f.setValor(valor);
+                boolean atrasado = m == 0 && i % 4 == 1;
+                if (venc.isBefore(hoje) && !atrasado) {
+                    f.setStatus("Pago");
+                    f.setDataPagamento(venc.minusDays((i + m) % 4));
+                } else {
+                    f.setStatus("Pendente");
+                }
+                financeiro.save(f);
+            }
+        }
+        ConfigMensalidade config = new ConfigMensalidade();
+        config.setEmpresaId(empresaId);
+        config.setAtiva(true);
+        config.setValor(129.90);
+        config.setDiaVencimento(10);
+        configMensalidade.save(config);
+        automaticas.gerar(empresaId);
     }
 
     private void pixDeExemplo(UUID empresaId) {

@@ -1226,9 +1226,15 @@
     if (!tbody) return;
     const COLS = 6;
 
+    const iniciais = (nome) => String(nome || "").split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+
     const linha = (a) => `
       <tr class="${a.ativo ? "" : "is-inactive"}">
-        <td class="col-name"><strong>${esc(a.nome)}</strong><span class="cell-sub">${esc(a.email)}</span></td>
+        <td class="col-name"><div class="pessoa">
+          <span class="avatar" data-foto="${a.fotoAtualizadaEm ? esc(a.id) : ""}" aria-hidden="true">${esc(iniciais(a.nome))}</span>
+          <div><strong>${esc(a.nome)}</strong><span class="cell-sub">${esc(a.email)}</span>
+          ${a.pedidoSenhaEm ? `<span class="badge badge--warn badge--sm">Pediu nova senha do app</span>` : ""}</div>
+        </div></td>
         <td>${esc(formatCpf(a.cpf) || "--")}</td>
         <td>${esc(formatPhone(a.telefone) || "--")}</td>
         <td>${esc(formatDate(a.dataCadastro))}${a.dataAtualizacao ? `<span class="cell-sub">Alterado em ${esc(formatDate(a.dataAtualizacao))}</span>` : ""}</td>
@@ -1236,6 +1242,7 @@
         <td class="num"><div class="row-actions">
           ${podeEditar ? `<button type="button" class="btn btn--sm" data-acao="editar" data-id="${esc(a.id)}" title="Editar">${icon("edit")}<span class="btn__label">Editar</span></button>` : ""}
           <button type="button" class="btn btn--sm btn--ghost" data-acao="historico" data-id="${esc(a.id)}" title="Histórico">${icon("history")}<span class="btn__label">Histórico</span></button>
+          ${podeEditar && a.pedidoSenhaEm ? `<button type="button" class="btn btn--sm btn--brand" data-acao="senha" data-id="${esc(a.id)}" title="Redefinir senha do app">${icon("key")}<span class="btn__label">Redefinir senha</span></button>` : ""}
           ${podeEditar ? `<button type="button" class="btn btn--sm ${a.ativo ? "btn--danger" : "btn--success"}" data-acao="ativo" data-id="${esc(a.id)}" title="${a.ativo ? "Inativar" : "Reativar"}">${icon("power")}<span class="btn__label">${a.ativo ? "Inativar" : "Reativar"}</span></button>` : ""}
         </div></td>
       </tr>`;
@@ -1256,6 +1263,17 @@
           return;
         }
         tbody.innerHTML = pg.itens.map(linha).join("");
+        tbody.querySelectorAll("[data-foto]:not([data-foto=''])").forEach(async (el) => {
+          try {
+            const f = await api(`/clientes/${encodeURIComponent(el.dataset.foto)}/foto`);
+            if (f && f.base64) {
+              el.textContent = "";
+              el.style.backgroundImage = `url("data:${f.tipo};base64,${f.base64}")`;
+            }
+          } catch {
+            return;
+          }
+        });
       },
       renderError: (err) => {
         tbody.innerHTML = linhaTabela(COLS, stateBlock({ icon: "x-circle", error: true, title: "Não foi possível carregar os alunos", text: friendlyError(err) }));
@@ -1279,6 +1297,22 @@
           modoEdicao(await api(`/clientes/${encodeURIComponent(id)}`));
         } catch (err) {
           fail("Não foi possível abrir o cadastro", err);
+        }
+        return;
+      }
+      if (acao === "senha" && aluno) {
+        const ok = await ui.confirm({
+          title: "Redefinir a senha do app?",
+          message: `${aluno.nome} pediu uma nova senha. Depois de redefinir, o aluno entra no app com o e-mail e o CPF e pode criar outra senha no perfil.`,
+          confirmText: "Redefinir"
+        });
+        if (!ok) return;
+        try {
+          await api(`/clientes/${encodeURIComponent(id)}/senha-app`, { method: "PATCH" });
+          ui.toast({ type: "success", title: "Senha redefinida", message: `${aluno.nome} já pode entrar com o CPF.` });
+          lista.load();
+        } catch (err) {
+          fail("Não foi possível redefinir a senha", err);
         }
         return;
       }
@@ -1755,7 +1789,43 @@
   };
 
   // CRM
+  const loadCRMFinanceiro = async () => {
+    const grafico = document.getElementById("fin-grafico");
+    if (!grafico || !hasPerm("FINANCEIRO_VER")) return;
+    const campo = (id) => document.getElementById(id);
+    try {
+      const d = await api("/crm/financeiro");
+      campo("fin-recebido").textContent = formatMoney(d.recebidoMes);
+      campo("fin-areceber").textContent = formatMoney(d.aReceber);
+      campo("fin-vencido").textContent = formatMoney(d.vencido);
+      campo("fin-inadimplentes").textContent = d.inadimplentes === 1 ? "1 aluno" : `${d.inadimplentes} alunos`;
+      campo("fin-percentual").textContent = `${d.percentualInadimplencia}%`;
+      const maximo = Math.max(1, ...d.meses.map((m) => Math.max(m.recebido, m.lancado)));
+      const nomes = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+      grafico.innerHTML = d.meses.map((m) => {
+        const [ano, mes] = m.mes.split("-").map(Number);
+        const alt = (v) => `${Math.max(v > 0 ? 3 : 0, Math.round((v / maximo) * 100))}%`;
+        return `<div class="crm-fin__mes" title="${esc(nomes[mes - 1])}/${ano}: recebido ${esc(formatMoney(m.recebido))}, lançado ${esc(formatMoney(m.lancado))}">
+          <div class="crm-fin__barras">
+            <span class="crm-fin__barra crm-fin__barra--lancado" style="height:${alt(m.lancado)}"></span>
+            <span class="crm-fin__barra crm-fin__barra--recebido" style="height:${alt(m.recebido)}"></span>
+          </div>
+          <span class="crm-fin__valor">${m.recebido > 0 ? esc(formatMoney(m.recebido).replace(",00", "")) : ""}</span>
+          <span class="crm-fin__nome">${esc(nomes[mes - 1])}</span>
+        </div>`;
+      }).join("");
+      const aviso = campo("fin-informados-crm");
+      if (d.informados > 0) {
+        aviso.hidden = false;
+        aviso.innerHTML = `${icon("wallet")}<span>${d.informados === 1 ? "1 aluno informou" : `${d.informados} alunos informaram`} pagamento por Pix. <a href="financeiro.html">Conferir no financeiro</a></span>`;
+      }
+    } catch (err) {
+      grafico.innerHTML = `<p class="msg-info">Não foi possível carregar o financeiro: ${esc(friendlyError(err))}</p>`;
+    }
+  };
+
   const loadCRMData = async () => {
+    loadCRMFinanceiro();
     const kpiTotal = document.getElementById("kpi-total-alunos");
     if (!kpiTotal) return;
     const kpiFreq = document.getElementById("kpi-frequentes");
@@ -2003,6 +2073,43 @@
       lista.setFilter("status", "Informado");
       document.getElementById("financeiro-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+
+    const formAuto = document.getElementById("formAutomatico");
+    if (formAuto && podeEditar) {
+      const campo = (id) => document.getElementById(id);
+      const info = campo("auto_info");
+      const mostrar = (c) => {
+        campo("auto_ativa").checked = !!c.ativa;
+        campo("auto_valor").value = c.valor != null ? decimalBR(c.valor, 2) : "";
+        campo("auto_dia").value = c.diaVencimento || "";
+        info.textContent = c.ativa && c.proximoVencimento
+          ? `Próximo lançamento: vencimento em ${formatDate(c.proximoVencimento)}. Quem já paga um valor diferente continua com o próprio valor.`
+          : "Quem já paga um valor diferente continua com o próprio valor.";
+      };
+      api("/financeiro/automatico").then(mostrar).catch(() => {});
+      formAuto.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = formAuto.querySelector('button[type="submit"]');
+        setBusy(btn, true, "Salvando...");
+        try {
+          const c = await api("/financeiro/automatico", {
+            method: "PUT",
+            body: { ativa: campo("auto_ativa").checked, valor: numeroBR(campo("auto_valor").value), diaVencimento: campo("auto_dia").value }
+          });
+          mostrar(c);
+          ui.toast({
+            type: "success",
+            title: c.ativa ? "Mensalidades automáticas ligadas" : "Mensalidades automáticas desligadas",
+            message: c.geradas ? `${c.geradas} mensalidade(s) lançada(s) agora.` : c.ativa ? "Nenhuma mensalidade nova para lançar agora." : "Os lançamentos voltam a ser manuais."
+          });
+          if (c.geradas) location.reload();
+        } catch (err) {
+          fail("Não foi possível salvar", err);
+        } finally {
+          setBusy(btn, false);
+        }
+      });
+    }
 
     const formPix = document.getElementById("formPix");
     if (formPix && podeEditar) {

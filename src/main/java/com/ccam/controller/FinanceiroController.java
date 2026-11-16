@@ -44,14 +44,17 @@ public class FinanceiroController {
     private final ClienteService clienteService;
     private final LogService logService;
     private final PixService pixService;
+    private final com.ccam.service.MensalidadeAutomaticaService automaticas;
 
     public FinanceiroController(FinanceiroRepository repository, ClienteRepository clienteRepository,
-                                ClienteService clienteService, LogService logService, PixService pixService) {
+                                ClienteService clienteService, LogService logService, PixService pixService,
+                                com.ccam.service.MensalidadeAutomaticaService automaticas) {
         this.repository = repository;
         this.clienteRepository = clienteRepository;
         this.clienteService = clienteService;
         this.logService = logService;
         this.pixService = pixService;
+        this.automaticas = automaticas;
     }
 
     @GetMapping
@@ -95,6 +98,46 @@ public class FinanceiroController {
                     "Pagamento informado pelo aluno não foi encontrado: " + resumo(f));
         }
         return ResponseEntity.ok(FinanceiroResponse.de(f, clienteRepository.findById(f.getClienteId()).orElse(null)));
+    }
+
+    @GetMapping("/automatico")
+    @RequerPermissao(Permissao.FINANCEIRO_VER)
+    public Map<String, Object> automatico(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario) {
+        return dadosAutomatico(automaticas.config(usuario.getEmpresaId()));
+    }
+
+    @PutMapping("/automatico")
+    @RequerPermissao(Permissao.FINANCEIRO_EDITAR)
+    public Map<String, Object> salvarAutomatico(@RequestAttribute(AuthInterceptor.ATRIBUTO) Usuario usuario,
+                                                @RequestBody Map<String, Object> dados) {
+        Double valor = null;
+        Integer dia = null;
+        try {
+            Object v = dados.get("valor");
+            if (v != null && !v.toString().isBlank()) {
+                valor = Double.valueOf(v.toString().replace(",", "."));
+            }
+            Object d = dados.get("diaVencimento");
+            if (d != null && !d.toString().isBlank()) {
+                dia = Integer.valueOf(d.toString().trim());
+            }
+        } catch (NumberFormatException e) {
+            throw new NegocioException("Confira o valor e o dia de vencimento.");
+        }
+        var c = automaticas.salvar(usuario.getEmpresaId(), Boolean.TRUE.equals(dados.get("ativa")), valor, dia);
+        Map<String, Object> r = dadosAutomatico(c);
+        r.put("geradas", automaticas.gerar(usuario.getEmpresaId()));
+        return r;
+    }
+
+    private static Map<String, Object> dadosAutomatico(com.ccam.model.ConfigMensalidade c) {
+        Map<String, Object> r = new java.util.HashMap<>();
+        r.put("ativa", c.isAtiva());
+        r.put("valor", c.getValor());
+        r.put("diaVencimento", c.getDiaVencimento());
+        r.put("proximoVencimento", c.getDiaVencimento() == null ? null
+                : com.ccam.service.MensalidadeAutomaticaService.proximoVencimento(c.getDiaVencimento(), LocalDate.now()));
+        return r;
     }
 
     @GetMapping("/pix")

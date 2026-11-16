@@ -16,6 +16,8 @@ public interface FinanceiroRepository extends JpaRepository<Financeiro, UUID> {
 
     List<Financeiro> findByEmpresaIdOrderByVencimentoDesc(UUID empresaId);
 
+    List<Financeiro> findByBoletoIdIsNotNullAndStatusAndPagamentoInformadoEmIsNull(String status);
+
     long countByEmpresaIdAndStatusAndPagamentoInformadoEmIsNotNull(UUID empresaId, String status);
 
     @Query("""

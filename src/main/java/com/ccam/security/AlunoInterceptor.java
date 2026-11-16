@@ -26,7 +26,8 @@ public class AlunoInterceptor implements HandlerInterceptor {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || !(handler instanceof HandlerMethod)) {
             return true;
         }
-        if ("POST".equalsIgnoreCase(request.getMethod()) && "/api/app/login".equals(request.getRequestURI())) {
+        if ("POST".equalsIgnoreCase(request.getMethod())
+                && ("/api/app/login".equals(request.getRequestURI()) || "/api/app/esqueci-senha".equals(request.getRequestURI()))) {
             return true;
         }
         Optional<Cliente> aluno = authService.autenticar(AuthInterceptor.extrairToken(request));

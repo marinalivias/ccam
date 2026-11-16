@@ -134,6 +134,18 @@ public class ClienteService {
         return salvo;
     }
 
+    @Transactional
+    public Cliente redefinirSenhaApp(Usuario autor, UUID id) {
+        Cliente c = buscarDaEmpresa(id, autor.getEmpresaId())
+                .orElseThrow(() -> new NegocioException("Aluno não encontrado."));
+        c.setSenhaHash(null);
+        c.setPedidoSenhaEm(null);
+        Cliente salvo = repository.save(c);
+        logService.registrar(autor, LogService.ALUNO, salvo.getId(), salvo.getId(), LogService.EDICAO,
+                "Senha do app redefinida. O aluno volta a entrar com o CPF.");
+        return salvo;
+    }
+
     public Page<Cliente> buscar(UUID empresaId, String busca, String status, Pageable pageable) {
         String s = status != null && STATUS.contains(status) ? status : "ativos";
         String termo = Paginacao.termo(busca);

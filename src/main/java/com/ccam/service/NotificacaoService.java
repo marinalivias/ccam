@@ -26,6 +26,7 @@ import java.util.Map;
 @Service
 public class NotificacaoService {
     private static final int DIAS = 30;
+    private static final int DIAS_SEM_TREINO = 7;
     private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM");
     private static final Locale BR = Locale.forLanguageTag("pt-BR");
 
@@ -34,14 +35,20 @@ public class NotificacaoService {
     private final LogAlteracaoRepository logs;
     private final LojaService lojaService;
     private final PixService pixService;
+    private final com.ccam.repository.ExercicioRepository exercicios;
+    private final com.ccam.repository.TreinoRealizadoRepository realizados;
 
     public NotificacaoService(FinanceiroRepository financeiro, MuralRepository mural, LogAlteracaoRepository logs,
-                              LojaService lojaService, PixService pixService) {
+                              LojaService lojaService, PixService pixService,
+                              com.ccam.repository.ExercicioRepository exercicios,
+                              com.ccam.repository.TreinoRealizadoRepository realizados) {
         this.financeiro = financeiro;
         this.mural = mural;
         this.logs = logs;
         this.lojaService = lojaService;
         this.pixService = pixService;
+        this.exercicios = exercicios;
+        this.realizados = realizados;
     }
 
     public List<NotificacaoApp> doAluno(Cliente aluno) {
@@ -52,6 +59,7 @@ public class NotificacaoService {
         aniversario(aluno, hoje, lista);
         avisos(aluno, limite, lista);
         treino(aluno, limite, lista);
+        inatividade(aluno, hoje, lista);
         lista.sort(Comparator.comparing(NotificacaoApp::data).reversed());
         return lista.size() > 40 ? lista.subList(0, 40) : lista;
     }
@@ -139,6 +147,26 @@ public class NotificacaoService {
                     ultimo.getUsuarioNome() + (n == 1 ? " fez uma alteração" : " fez " + n + " alterações") + " no seu treino. Confira os exercícios.",
                     ultimo.getDataHora()));
         }
+    }
+
+    private void inatividade(Cliente aluno, LocalDate hoje, List<NotificacaoApp> lista) {
+        if (exercicios.findByClienteId(aluno.getId()).isEmpty()) {
+            return;
+        }
+        LocalDate ultimo = realizados.findFirstByClienteIdOrderByDataDesc(aluno.getId())
+                .map(com.ccam.model.TreinoRealizado::getData)
+                .orElse(aluno.getDataCadastro() == null ? null : aluno.getDataCadastro().toLocalDate());
+        if (ultimo == null) {
+            return;
+        }
+        long dias = ChronoUnit.DAYS.between(ultimo, hoje);
+        if (dias < DIAS_SEM_TREINO) {
+            return;
+        }
+        long ciclo = (dias - DIAS_SEM_TREINO) / 5;
+        lista.add(new NotificacaoApp("inativo:" + ultimo + ":" + ciclo, "treino", "Sentimos sua falta!",
+                "Faz " + dias + " dias que você não registra um treino. Que tal voltar hoje?",
+                ultimo.plusDays(DIAS_SEM_TREINO + ciclo * 5).atTime(10, 0)));
     }
 
     private static String resumo(String texto) {

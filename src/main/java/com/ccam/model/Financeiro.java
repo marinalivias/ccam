@@ -33,4 +33,16 @@ public class Financeiro {
 
     @Column(name = "pagamento_informado_em")
     private java.time.LocalDateTime pagamentoInformadoEm;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "boleto_id", length = 40)
+    private String boletoId;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "boleto_url", length = 300)
+    private String boletoUrl;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "linha_digitavel", length = 80)
+    private String linhaDigitavel;
 }

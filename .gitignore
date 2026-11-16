@@ -35,3 +35,8 @@ build/
 # Senhas e configuracao local
 .env
 application-local.properties
+
+# Variacoes do .env e logs
+.env.*
+!.env.example
+*.log

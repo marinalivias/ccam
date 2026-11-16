@@ -13,9 +13,12 @@ public record ClienteResponse(
         Double peso,
         boolean ativo,
         LocalDateTime dataCadastro,
-        LocalDateTime dataAtualizacao) {
+        LocalDateTime dataAtualizacao,
+        LocalDateTime fotoAtualizadaEm,
+        LocalDateTime pedidoSenhaEm) {
     public static ClienteResponse de(Cliente c) {
         return new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getCpf(),
-                c.getTelefone(), c.getPeso(), c.isAtivo(), c.getDataCadastro(), c.getDataAtualizacao());
+                c.getTelefone(), c.getPeso(), c.isAtivo(), c.getDataCadastro(), c.getDataAtualizacao(),
+                c.getFotoAtualizadaEm(), c.getPedidoSenhaEm());
     }
 }

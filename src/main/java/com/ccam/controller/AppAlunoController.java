@@ -39,6 +39,9 @@ public class AppAlunoController {
     private final TreinoRealizadoService treinoRealizado;
     private final PixService pixService;
     private final com.ccam.service.NotificacaoService notificacoes;
+    private final com.ccam.service.FotoService fotoService;
+    private final com.ccam.repository.EmpresaRepository empresas;
+    private final com.ccam.service.BoletoService boletos;
 
     public AppAlunoController(AlunoAuthService authService, ExercicioRepository exercicios,
                               CatalogoExercicioRepository catalogo, TreinoRealizadoRepository realizados,
@@ -46,7 +49,10 @@ public class AppAlunoController {
                               FrequenciaService frequencia, LogService logService,
                               ProdutoRepository produtos, LojaService lojaService,
                               TreinoRealizadoService treinoRealizado, PixService pixService,
-                              com.ccam.service.NotificacaoService notificacoes) {
+                              com.ccam.service.NotificacaoService notificacoes,
+                              com.ccam.service.FotoService fotoService,
+                              com.ccam.repository.EmpresaRepository empresas,
+                              com.ccam.service.BoletoService boletos) {
         this.authService = authService;
         this.exercicios = exercicios;
         this.catalogo = catalogo;
@@ -61,6 +67,9 @@ public class AppAlunoController {
         this.treinoRealizado = treinoRealizado;
         this.pixService = pixService;
         this.notificacoes = notificacoes;
+        this.fotoService = fotoService;
+        this.empresas = empresas;
+        this.boletos = boletos;
     }
 
     @PostMapping("/login")
@@ -72,6 +81,27 @@ public class AppAlunoController {
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         authService.logout(AuthInterceptor.extrairToken(request));
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/esqueci-senha")
+    public Map<String, String> esqueciSenha(@RequestBody Map<String, String> corpo) {
+        authService.pedirNovaSenha(corpo.get("email"));
+        return Map.of("mensagem", "Se o e-mail estiver cadastrado, a recepção da academia foi avisada.");
+    }
+
+    @GetMapping("/foto")
+    public ResponseEntity<Map<String, String>> foto(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        return fotoService.buscar(aluno).map(ResponseEntity::ok).orElse(ResponseEntity.noContent().build());
+    }
+
+    @PutMapping("/foto")
+    public AlunoPerfil salvarFoto(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno, @RequestBody Map<String, String> corpo) {
+        return authService.perfil(fotoService.salvar(aluno, corpo.get("tipo"), corpo.get("base64")));
+    }
+
+    @DeleteMapping("/foto")
+    public AlunoPerfil removerFoto(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno) {
+        return authService.perfil(fotoService.remover(aluno));
     }
 
     @PutMapping("/senha")
@@ -240,6 +270,7 @@ public class AppAlunoController {
         Map<String, Object> r = new java.util.HashMap<>();
         r.put("pixAtivo", config != null && config.getChave() != null && !config.getChave().isBlank());
         r.put("diaPixDisponivel", config == null ? null : config.getDiaDisponivel());
+        r.put("boletoAtivo", boletos.disponivel());
         return r;
     }
 
@@ -257,6 +288,45 @@ public class AppAlunoController {
                 "valor", f.getValor(),
                 "recebedor", config.getNomeRecebedor(),
                 "chave", config.getChave());
+    }
+
+    @PostMapping("/financeiro/{id}/boleto")
+    @Transactional
+    public Map<String, Object> boleto(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno, @PathVariable UUID id) {
+        Financeiro f = mensalidadeDoAluno(aluno, id);
+        if ("Pago".equals(f.getStatus())) {
+            throw new NegocioException("Esta mensalidade já está paga.");
+        }
+        f = boletos.gerar(aluno, f);
+        Map<String, Object> r = new java.util.HashMap<>();
+        r.put("url", f.getBoletoUrl());
+        r.put("linhaDigitavel", f.getLinhaDigitavel());
+        r.put("valor", f.getValor());
+        r.put("vencimento", f.getVencimento());
+        return r;
+    }
+
+    @GetMapping("/financeiro/{id}/comprovante")
+    public Map<String, Object> comprovante(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno, @PathVariable UUID id) {
+        Financeiro f = mensalidadeDoAluno(aluno, id);
+        if (!"Pago".equals(f.getStatus())) {
+            throw new NegocioException("O comprovante fica disponível depois que a academia confirma o pagamento.");
+        }
+        var empresa = aluno.getEmpresaId() == null ? null : empresas.findById(aluno.getEmpresaId()).orElse(null);
+        String cpf = aluno.getCpf() == null ? "" : aluno.getCpf().replaceAll("[^0-9]", "");
+        Map<String, Object> r = new java.util.LinkedHashMap<>();
+        r.put("numero", f.getId().toString().replace("-", "").substring(0, 10).toUpperCase());
+        r.put("aluno", aluno.getNome());
+        r.put("cpf", cpf.length() == 11 ? "***." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-**" : "");
+        r.put("academia", empresa == null ? "" : (empresa.getNomeFantasia() != null && !empresa.getNomeFantasia().isBlank()
+                ? empresa.getNomeFantasia() : empresa.getRazaoSocial()));
+        r.put("razaoSocial", empresa == null ? "" : empresa.getRazaoSocial());
+        r.put("cnpj", empresa == null ? "" : empresa.getCnpj());
+        r.put("valor", f.getValor());
+        r.put("vencimento", f.getVencimento());
+        r.put("dataPagamento", f.getDataPagamento());
+        r.put("emitidoEm", LocalDateTime.now());
+        return r;
     }
 
     @PostMapping("/financeiro/{id}/informar-pagamento")

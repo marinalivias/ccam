@@ -3108,3 +3108,165 @@ tr.is-inactive td strong {
 .aviso-informados span {
   flex: 1 1 220px;
 }
+
+/* Foto do aluno na listagem */
+.pessoa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pessoa .avatar {
+  width: 36px;
+  height: 36px;
+  background-size: cover;
+  background-position: center;
+}
+
+.badge--sm {
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+/* Financeiro no CRM */
+#crm-financeiro {
+  margin-top: 18px;
+}
+
+#crm-financeiro .card__head {
+  align-items: center;
+}
+
+.crm-fin__link {
+  margin-left: auto;
+}
+
+.crm-fin__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.crm-fin__kpi {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.crm-fin__kpi strong {
+  font-size: 20px;
+  letter-spacing: -.01em;
+}
+
+.crm-fin__kpi--alerta strong {
+  color: #fca5a5;
+}
+
+.crm-fin__rotulo {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.crm-fin__grafico {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  height: 190px;
+  padding: 8px 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.crm-fin__mes {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  justify-items: center;
+  height: 100%;
+  gap: 4px;
+}
+
+.crm-fin__barras {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+}
+
+.crm-fin__barra {
+  width: min(22px, 34%);
+  border-radius: 6px 6px 2px 2px;
+}
+
+.crm-fin__barra--recebido {
+  background: linear-gradient(180deg, #4ade80, #16a34a);
+}
+
+.crm-fin__barra--lancado {
+  background: rgba(139, 92, 246, .35);
+  border: 1px solid rgba(167, 139, 250, .6);
+}
+
+.crm-fin__valor {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.crm-fin__nome {
+  padding-bottom: 6px;
+  color: var(--subtle);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.crm-fin__legenda {
+  display: flex;
+  gap: 16px;
+  margin: 10px 0 4px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.crm-fin__legenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.crm-fin__cor {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.crm-fin__cor--recebido {
+  background: #22c55e;
+}
+
+.crm-fin__cor--lancado {
+  background: rgba(139, 92, 246, .5);
+}
+
+#fin-informados-crm {
+  margin: 14px 0 0;
+}
+
+#fin-informados-crm a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .crm-fin__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

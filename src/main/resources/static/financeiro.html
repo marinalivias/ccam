@@ -120,6 +120,36 @@
 
             <article class="card" data-perm="FINANCEIRO_EDITAR">
               <div class="card__head">
+                <span class="chip-icon chip-icon--sky"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg></span>
+                <div>
+                  <h2>Mensalidades automáticas</h2>
+                  <p class="help">Todo mês o sistema lança a mensalidade de cada aluno ativo.</p>
+                </div>
+              </div>
+              <form id="formAutomatico">
+                <label class="check-row" for="auto_ativa">
+                  <input type="checkbox" id="auto_ativa" />
+                  <span>Gerar as mensalidades sozinho</span>
+                </label>
+                <div class="fgrid">
+                  <div class="field col-3">
+                    <label for="auto_valor">Valor padrão (R$)</label>
+                    <input id="auto_valor" type="text" inputmode="decimal" placeholder="Ex: 129,90" />
+                  </div>
+                  <div class="field col-3">
+                    <label for="auto_dia">Dia do vencimento</label>
+                    <input id="auto_dia" type="number" min="1" max="28" inputmode="numeric" placeholder="Ex: 10" />
+                  </div>
+                </div>
+                <p class="help" id="auto_info">Quem já paga um valor diferente continua com o próprio valor.</p>
+                <div class="form-actions">
+                  <button class="btn btn--brand btn--block" type="submit"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Salvar</button>
+                </div>
+              </form>
+            </article>
+
+            <article class="card" data-perm="FINANCEIRO_EDITAR">
+              <div class="card__head">
                 <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg></span>
                 <div>
                   <h2>Recebimento por Pix</h2>

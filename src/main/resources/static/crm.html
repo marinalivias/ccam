@@ -60,6 +60,29 @@
           </article>
         </section>
 
+        <section class="card" data-perm="FINANCEIRO_VER" id="crm-financeiro">
+          <div class="card__head">
+            <span class="chip-icon chip-icon--green"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-wallet"></use></svg></span>
+            <div>
+              <h2>Financeiro</h2>
+              <p class="help">Recebimentos do mês, atrasos e a evolução dos últimos 6 meses.</p>
+            </div>
+            <a class="btn btn--sm btn--ghost crm-fin__link" href="financeiro.html">Abrir financeiro</a>
+          </div>
+          <div class="crm-fin__kpis">
+            <div class="crm-fin__kpi"><span class="crm-fin__rotulo">Recebido no mês</span><strong id="fin-recebido">--</strong></div>
+            <div class="crm-fin__kpi"><span class="crm-fin__rotulo">A receber no mês</span><strong id="fin-areceber">--</strong></div>
+            <div class="crm-fin__kpi crm-fin__kpi--alerta"><span class="crm-fin__rotulo">Em atraso</span><strong id="fin-vencido">--</strong><span class="cell-sub" id="fin-inadimplentes"></span></div>
+            <div class="crm-fin__kpi"><span class="crm-fin__rotulo">Inadimplência</span><strong id="fin-percentual">--</strong><span class="cell-sub">dos alunos ativos</span></div>
+          </div>
+          <div class="crm-fin__grafico" id="fin-grafico" role="img" aria-label="Recebido e lançado nos últimos 6 meses"></div>
+          <div class="crm-fin__legenda">
+            <span><i class="crm-fin__cor crm-fin__cor--recebido"></i>Recebido</span>
+            <span><i class="crm-fin__cor crm-fin__cor--lancado"></i>Lançado</span>
+          </div>
+          <p class="aviso-informados" id="fin-informados-crm" hidden></p>
+        </section>
+
         <section class="grid grid--2">
           <article class="card">
             <div class="card__head">
