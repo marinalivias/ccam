@@ -34,8 +34,6 @@ No IntelliJ, rode a classe `CcamApplication`.
 | `ASAAS_CHAVE` | Chave da API do Asaas para gerar boletos. Vazia, o boleto fica desligado |
 | `EXIBIR_LINK_RESET` | `true` mostra o link de redefinir senha na tela, útil sem servidor de e-mail |
 
-O `.env` não vai para o GitHub. Só o `.env.example` fica no repositório.
-
 ## O que o sistema faz
 
 - Alunos: cadastro, inativação (nunca são apagados), histórico de alterações, foto enviada pelo app e
