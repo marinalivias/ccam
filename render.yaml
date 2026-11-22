@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ccam
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /login.html
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_SENHA
+        sync: false
+      - key: GESTOR_EMAIL
+        value: ana.moreira@formulafitness.com
+      - key: GESTOR_SENHA
+        value: teste123
+      - key: ALUNO_SENHA
+        value: teste123
+      - key: DEMO
+        value: "true"
+      - key: SWAGGER
+        value: "false"
+      - key: ASAAS_CHAVE
+        sync: false
