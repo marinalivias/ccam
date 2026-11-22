@@ -3,7 +3,7 @@ services:
     name: ccam
     runtime: docker
     plan: free
-    region: oregon
+    region: virginia
     healthCheckPath: /login.html
     envVars:
       - key: DB_URL
