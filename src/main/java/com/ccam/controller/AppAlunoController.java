@@ -41,7 +41,6 @@ public class AppAlunoController {
     private final com.ccam.service.NotificacaoService notificacoes;
     private final com.ccam.service.FotoService fotoService;
     private final com.ccam.repository.EmpresaRepository empresas;
-    private final com.ccam.service.BoletoService boletos;
 
     public AppAlunoController(AlunoAuthService authService, ExercicioRepository exercicios,
                               CatalogoExercicioRepository catalogo, TreinoRealizadoRepository realizados,
@@ -51,8 +50,7 @@ public class AppAlunoController {
                               TreinoRealizadoService treinoRealizado, PixService pixService,
                               com.ccam.service.NotificacaoService notificacoes,
                               com.ccam.service.FotoService fotoService,
-                              com.ccam.repository.EmpresaRepository empresas,
-                              com.ccam.service.BoletoService boletos) {
+                              com.ccam.repository.EmpresaRepository empresas) {
         this.authService = authService;
         this.exercicios = exercicios;
         this.catalogo = catalogo;
@@ -69,7 +67,6 @@ public class AppAlunoController {
         this.notificacoes = notificacoes;
         this.fotoService = fotoService;
         this.empresas = empresas;
-        this.boletos = boletos;
     }
 
     @PostMapping("/login")
@@ -270,7 +267,6 @@ public class AppAlunoController {
         Map<String, Object> r = new java.util.HashMap<>();
         r.put("pixAtivo", config != null && config.getChave() != null && !config.getChave().isBlank());
         r.put("diaPixDisponivel", config == null ? null : config.getDiaDisponivel());
-        r.put("boletoAtivo", boletos.disponivel());
         return r;
     }
 
@@ -288,22 +284,6 @@ public class AppAlunoController {
                 "valor", f.getValor(),
                 "recebedor", config.getNomeRecebedor(),
                 "chave", config.getChave());
-    }
-
-    @PostMapping("/financeiro/{id}/boleto")
-    @Transactional
-    public Map<String, Object> boleto(@RequestAttribute(AlunoInterceptor.ATRIBUTO) Cliente aluno, @PathVariable UUID id) {
-        Financeiro f = mensalidadeDoAluno(aluno, id);
-        if ("Pago".equals(f.getStatus())) {
-            throw new NegocioException("Esta mensalidade já está paga.");
-        }
-        f = boletos.gerar(aluno, f);
-        Map<String, Object> r = new java.util.HashMap<>();
-        r.put("url", f.getBoletoUrl());
-        r.put("linhaDigitavel", f.getLinhaDigitavel());
-        r.put("valor", f.getValor());
-        r.put("vencimento", f.getVencimento());
-        return r;
     }
 
     @GetMapping("/financeiro/{id}/comprovante")

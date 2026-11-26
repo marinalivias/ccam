@@ -26,5 +26,3 @@ services:
         value: "true"
       - key: SWAGGER
         value: "false"
-      - key: ASAAS_CHAVE
-        sync: false

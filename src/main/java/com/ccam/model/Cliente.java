@@ -63,10 +63,6 @@ public class Cliente {
     private LocalDateTime pedidoSenhaEm;
 
     @com.fasterxml.jackson.annotation.JsonIgnore
-    @Column(name = "asaas_cliente_id", length = 40)
-    private String asaasClienteId;
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(name = "foto_atualizada_em")
     private LocalDateTime fotoAtualizadaEm;
 }

@@ -14,13 +14,50 @@ Feito com Java 17, Spring Boot, PostgreSQL, HTML, CSS e JavaScript.
 Com os dois dá para mostrar o sistema inteiro. O cadastro de academias e as mensagens do "Fale conosco" ficam com o
 administrador, configurado em `ADMIN_EMAIL` e `ADMIN_SENHA` no `.env`.
 
-## Como rodar
+## Online
 
-1. Crie um banco no PostgreSQL chamado `ccam`.
-2. Copie o `.env.example` para `.env` e preencha a senha do banco.
-3. Rode `./mvnw spring-boot:run` e abra http://localhost:8081
+- Site: https://ccam.onrender.com
+- App no navegador: https://ccam.onrender.com/app
+- APK para Android: https://github.com/marinalivias/ccam-app/releases/latest
 
-No IntelliJ, rode a classe `CcamApplication`.
+O servidor gratuito dorme quando fica parado. O primeiro acesso pode levar até 1 minuto.
+
+## Como rodar no computador
+
+### O que instalar
+
+- Git
+- Java 17 ou mais novo (JDK)
+- PostgreSQL
+- IntelliJ IDEA (opcional, dá para rodar pelo terminal)
+
+### Passo a passo
+
+1. Baixe o projeto:
+
+```bash
+git clone https://github.com/marinalivias/ccam.git
+cd ccam
+```
+
+2. No PostgreSQL, crie um banco vazio chamado `ccam`. As tabelas são criadas sozinhas.
+3. Copie o arquivo de configuração e coloque a senha do seu PostgreSQL em `DB_PASSWORD`:
+
+```bash
+cp .env.example .env
+```
+
+4. Rode o sistema:
+
+```bash
+./mvnw spring-boot:run
+```
+
+No Windows use `mvnw.cmd spring-boot:run`. No IntelliJ, abra a pasta e rode a classe `CcamApplication`.
+
+5. Abra http://localhost:8081 e entre com o login da gestora. O app do aluno fica em http://localhost:8081/app
+
+O `.env` tem senhas e não vai para o GitHub.
 
 ## Variáveis do `.env`
 
@@ -31,7 +68,7 @@ No IntelliJ, rode a classe `CcamApplication`.
 | `GESTOR_EMAIL`, `GESTOR_SENHA` | Gestor da academia padrão |
 | `ALUNO_SENHA` | Senha do aluno de teste no app |
 | `DEMO` | `true` prepara os dados de demonstração a cada vez que o sistema sobe |
-| `ASAAS_CHAVE` | Chave da API do Asaas para gerar boletos. Vazia, o boleto fica desligado |
+| `SWAGGER` | `true` libera a documentação da API em `/swagger-ui/index.html` |
 | `EXIBIR_LINK_RESET` | `true` mostra o link de redefinir senha na tela, útil sem servidor de e-mail |
 
 ## O que o sistema faz
@@ -39,7 +76,7 @@ No IntelliJ, rode a classe `CcamApplication`.
 - Alunos: cadastro, inativação (nunca são apagados), histórico de alterações, foto enviada pelo app e
   redefinição da senha do app quando o aluno pede.
 - Treinos: fichas por dia da semana com catálogo de exercícios e GIFs.
-- Financeiro: mensalidades, Pix, boleto, pagamentos informados pelo aluno e mensalidades automáticas.
+- Financeiro: mensalidades, Pix, pagamentos informados pelo aluno e mensalidades automáticas.
 - CRM: frequência, alunos ausentes, aniversariantes e resumo financeiro do mês com gráfico dos últimos 6 meses.
 - Mural de avisos, loja da academia e usuários com perfis de acesso.
 
@@ -47,9 +84,6 @@ No IntelliJ, rode a classe `CcamApplication`.
 
 O gestor cadastra a chave Pix da academia na tela de financeiro. O aluno gera o QR code no app, paga no banco
 e avisa que pagou. O pagamento aparece no site como informado e o responsável só confirma.
-
-O boleto usa o Asaas. Crie uma conta de testes em https://sandbox.asaas.com, gere a chave da API e coloque em
-`ASAAS_CHAVE`. Quando o banco confirma um boleto pago, ele aparece no site como informado, igual ao Pix.
 
 Com as mensalidades automáticas ligadas, todo dia às 6h o sistema lança a próxima mensalidade de cada aluno ativo.
 Quem já paga um valor diferente continua com o próprio valor.
